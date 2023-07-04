@@ -1,10 +1,20 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use ray::Ray;
 use std::{fs::File, process::exit};
+use vec3::Vec3;
+
+mod ray;
+mod vec3;
+
+fn color(r: Ray) -> Vec3 {
+    let t = 0.5 * (r.direction().make_unit_vector().y + 1.);
+    Vec3::new(1., 1., 1.) * (1. - t) + Vec3::new(0.5, 0.7, 1.) * t
+}
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image1.jpg");
+    let path = std::path::Path::new("output/book1/image2.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -19,13 +29,20 @@ fn main() {
         ProgressBar::new((height * width) as u64)
     };
 
+    let lower_left_corner = Vec3::new(-2., -1., -1.);
+    let horizontal = Vec3::new(4., 0., 0.);
+    let vertical = Vec3::new(0., 2., 0.);
+    let origin = Vec3::new(0., 0., 0.);
+
     for j in (0..height).rev() {
         for i in 0..width {
             let pixel = img.get_pixel_mut(i, j);
 
-            let r: f64 = ((i as f64) / ((width - 1) as f64)) * 255.999;
-            let g: f64 = ((j as f64) / ((height - 1) as f64)) * 255.999;
-            let b: f64 = 0.25 * 255.999;
+            let u = (i as f64) / (width as f64);
+            let v = (j as f64) / (height as f64);
+            let ray = Ray::new(origin, lower_left_corner + horizontal * u + vertical * v);
+            let col = color(ray) * 255.99;
+            let (r, g, b) = (col.get(0), col.get(1), col.get(2));
             *pixel = image::Rgb([r as u8, g as u8, b as u8]);
         }
         progress.inc(1);
