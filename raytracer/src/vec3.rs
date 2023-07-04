@@ -1,5 +1,7 @@
-use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
-use std::ops::{Div, DivAssign, Mul, MulAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+
+pub type Point3 = Vec3;
+pub type Color3 = Vec3;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Vec3 {
@@ -13,7 +15,7 @@ impl Vec3 {
         Self { x, y, z }
     }
 
-    pub fn squared_len(&self) -> f64 {
+    pub fn len_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
@@ -21,7 +23,7 @@ impl Vec3 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
-    pub fn make_unit_vector(&self) -> Self {
+    pub fn unit(&self) -> Self {
         *self / self.len()
     }
 

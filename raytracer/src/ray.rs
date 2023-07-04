@@ -1,23 +1,23 @@
-use crate::Vec3;
+use crate::{Point3, Vec3};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Ray {
-    pub a: Vec3,
+    pub a: Point3,
     pub b: Vec3,
 }
 
 impl Ray {
-    pub fn new(a: Vec3, b: Vec3) -> Self {
+    pub fn new(a: Point3, b: Vec3) -> Self {
         Ray { a, b }
     }
 
-    pub fn origin(&self) -> Vec3 {
+    pub fn origin(&self) -> Point3 {
         self.a
     }
     pub fn direction(&self) -> Vec3 {
         self.b
     }
-    pub fn at(&self, t: f64) -> Vec3 {
+    pub fn at(&self, t: f64) -> Point3 {
         self.a + self.b * t
     }
 }
