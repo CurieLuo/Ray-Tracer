@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{HitRecord, Hittable, Ray};
+use crate::{hittable::*, utility::*};
 
 #[derive(Clone)]
 pub struct HittableList {

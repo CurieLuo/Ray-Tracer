@@ -34,6 +34,14 @@ impl Vec3 {
             _ => self.z,
         }
     }
+
+    pub fn at(&mut self, i: i32) -> &mut f64 {
+        match i {
+            0 => &mut self.x,
+            1 => &mut self.y,
+            _ => &mut self.z,
+        }
+    }
 }
 
 impl Neg for Vec3 {
