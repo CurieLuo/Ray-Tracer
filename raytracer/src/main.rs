@@ -2,7 +2,7 @@ use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use ray::Ray;
-use std::{fs::File, mem::Discriminant, process::exit};
+use std::{fs::File, /*, mem::Discriminant*/ process::exit};
 use vec3::Vec3;
 
 mod ray;
