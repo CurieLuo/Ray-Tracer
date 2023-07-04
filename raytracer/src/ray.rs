@@ -17,7 +17,7 @@ impl Ray {
     pub fn direction(&self) -> Vec3 {
         self.b
     }
-    // pub fn at(&self, t: f64) -> Vec3 {
-    //     self.a + self.b * t
-    // }
+    pub fn at(&self, t: f64) -> Vec3 {
+        self.a + self.b * t
+    }
 }

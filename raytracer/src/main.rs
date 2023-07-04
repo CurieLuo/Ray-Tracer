@@ -8,30 +8,36 @@ use vec3::Vec3;
 mod ray;
 mod vec3;
 
-fn hit_sphere(center: Vec3, radius: f64, r: Ray) -> bool {
+fn hit_sphere(center: Vec3, radius: f64, r: Ray) -> f64 {
     let oc = r.origin() - center;
     let a = r.direction().squared_len();
     let b = oc * r.direction() * 2.;
     let c = oc.squared_len() - radius * radius;
     let discriminant = b * b - 4. * a * c;
-    discriminant > 0.
+    if discriminant < 0. {
+        -1.
+    } else {
+        (-b - discriminant.sqrt()) / (2. * a)
+    }
 }
 
 fn color(r: Ray) -> Vec3 {
-    if hit_sphere(Vec3::new(0., 0., -1.), 0.5, r) {
-        return Vec3::new(1., 0., 0.);
+    let t = hit_sphere(Vec3::new(0., 0., -1.), 0.5, r);
+    if t > 0. {
+        let n = (r.at(t) - Vec3::new(0., 0., -1.)).make_unit_vector();
+        return Vec3::new(n.x + 1., n.y + 1., n.z + 1.) * 0.5;
     }
     let t = 0.5 * (r.direction().make_unit_vector().y + 1.);
     Vec3::new(1., 1., 1.) * (1. - t) + Vec3::new(0.5, 0.7, 1.) * t
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image3.jpg");
+    let path = std::path::Path::new("output/book1/image4.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
-    let width = 256;
-    let height = 256;
+    let width = 200;
+    let height = 100;
     let quality = 100;
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
@@ -41,14 +47,14 @@ fn main() {
         ProgressBar::new((height * width) as u64)
     };
 
-    let lower_left_corner = Vec3::new(-1., -1., -1.);
-    let horizontal = Vec3::new(2., 0., 0.);
+    let lower_left_corner = Vec3::new(-2., -1., -1.);
+    let horizontal = Vec3::new(4., 0., 0.);
     let vertical = Vec3::new(0., 2., 0.);
     let origin = Vec3::new(0., 0., 0.);
 
     for j in (0..height).rev() {
         for i in 0..width {
-            let pixel = img.get_pixel_mut(i, j);
+            let pixel = img.get_pixel_mut(i, height - 1 - j);
 
             let u = (i as f64) / (width as f64);
             let v = (j as f64) / (height as f64);
