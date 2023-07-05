@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-use crate::utility::*;
+use crate::utility::randrange;
 
 pub type Point3 = Vec3;
 pub type Color3 = Vec3;

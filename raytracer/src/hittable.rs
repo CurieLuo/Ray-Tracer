@@ -1,4 +1,4 @@
-use crate::utility::*;
+use crate::{material::Material, utility::*};
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct HitRecord {
