@@ -32,7 +32,7 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color3 {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image7.jpg");
+    let path = std::path::Path::new("output/book1/image8.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -73,7 +73,7 @@ fn main() {
             }
             pixel_color /= samples_per_pixel as f64;
             for _i in 0..3 {
-                *pixel_color.at(_i) = clamp(pixel_color.get(_i) /* .sqrt()*/, 0., 0.99);
+                *pixel_color.at(_i) = clamp(pixel_color.get(_i).sqrt(), 0., 0.99);
             }
             pixel_color *= 256.;
             let (r, g, b) = (pixel_color.get(0), pixel_color.get(1), pixel_color.get(2));
