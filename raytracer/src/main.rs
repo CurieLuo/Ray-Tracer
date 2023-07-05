@@ -17,17 +17,22 @@ mod sphere;
 mod utility;
 mod vec3;
 
-fn ray_color(r: Ray, world: &dyn Hittable) -> Color3 {
+fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color3 {
+    if depth <= 0 {
+        return Color3::new(0., 0., 0.);
+    }
+
     let mut rec = HitRecord::default();
-    if world.hit(r, 0., INFINITY, &mut rec) {
-        return (rec.normal + Color3::new(1., 1., 1.)) * 0.5;
+    if world.hit(r, 0.001, INFINITY, &mut rec) {
+        let target = rec.p + rec.normal + random_in_unit_sphere();
+        return ray_color(Ray::new(rec.p, target - rec.p), world, depth - 1) * 0.5;
     }
     let t = 0.5 * (r.direction().unit().y + 1.);
     Color3::new(1., 1., 1.) * (1. - t) + Color3::new(0.5, 0.7, 1.) * t
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image6.jpg");
+    let path = std::path::Path::new("output/book1/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -35,8 +40,9 @@ fn main() {
     let aspect_ratio: f64 = 16.0 / 9.0;
     let width: u32 = 400;
     let height: u32 = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel = 100;
-    let quality = 100;
+    let samples_per_pixel: i32 = 100;
+    let max_depth: i32 = 50;
+    let quality: u8 = 100;
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
     // Progress Bar
@@ -63,11 +69,11 @@ fn main() {
                 let u = ((i as f64) + random()) / ((width - 1) as f64);
                 let v = ((j as f64) + random()) / ((height - 1) as f64);
                 let ray = cam.get_ray(u, v);
-                pixel_color += ray_color(ray, &world);
+                pixel_color += ray_color(ray, &world, max_depth);
             }
             pixel_color /= samples_per_pixel as f64;
             for _i in 0..3 {
-                *pixel_color.at(_i) = clamp(pixel_color.get(_i), 0., 0.9999);
+                *pixel_color.at(_i) = clamp(pixel_color.get(_i) /* .sqrt()*/, 0., 0.99);
             }
             pixel_color *= 256.;
             let (r, g, b) = (pixel_color.get(0), pixel_color.get(1), pixel_color.get(2));

@@ -1,5 +1,7 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+use crate::utility::*;
+
 pub type Point3 = Vec3;
 pub type Color3 = Vec3;
 
@@ -40,6 +42,23 @@ impl Vec3 {
             0 => &mut self.x,
             1 => &mut self.y,
             _ => &mut self.z,
+        }
+    }
+
+    pub fn randrange(min: f64, max: f64) -> Self {
+        Self::new(
+            randrange(min, max),
+            randrange(min, max),
+            randrange(min, max),
+        )
+    }
+}
+
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = Vec3::randrange(-1., 1.);
+        if p.len_squared() < 1. {
+            return p;
         }
     }
 }
