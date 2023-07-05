@@ -63,16 +63,18 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
-pub fn random_unit_vector() -> Vec3 {
-    random_in_unit_sphere().unit()
-}
-
 // pub fn random_unit_vector() -> Vec3 {
-//     let phi = randrange(0., PI);
-//     let theta = randrange(-PI, PI);
-//     let cphi = phi.cos();
-//     Vec3::new(cphi * theta.cos(), cphi * theta.sin(), phi.sin())
+//     random_in_unit_sphere().unit()
 // }
+
+pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if in_unit_sphere * normal > 0. {
+        in_unit_sphere
+    } else {
+        -in_unit_sphere
+    }
+}
 
 impl Neg for Vec3 {
     type Output = Self;
