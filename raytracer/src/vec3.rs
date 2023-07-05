@@ -63,6 +63,17 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
+pub fn random_unit_vector() -> Vec3 {
+    random_in_unit_sphere().unit()
+}
+
+// pub fn random_unit_vector() -> Vec3 {
+//     let phi = randrange(0., PI);
+//     let theta = randrange(-PI, PI);
+//     let cphi = phi.cos();
+//     Vec3::new(cphi * theta.cos(), cphi * theta.sin(), phi.sin())
+// }
+
 impl Neg for Vec3 {
     type Output = Self;
     fn neg(self) -> Self::Output {
