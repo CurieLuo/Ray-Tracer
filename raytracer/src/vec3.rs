@@ -63,14 +63,20 @@ impl Vec3 {
     }
 }
 
-pub fn dot(lhs: Vec3, rhs: Vec3) -> f64 {
-    lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z
+pub fn dot(a: Vec3, b: Vec3) -> f64 {
+    a.x * b.x + a.y * b.y + a.z * b.z
+}
+pub fn cross(a: Vec3, b: Vec3) -> Vec3 {
+    Vec3 {
+        x: a.y * b.z - a.z * b.y,
+        y: a.z * b.x - a.x * b.z,
+        z: a.x * b.y - a.y * b.x,
+    }
 }
 
 pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2. * dot(v, n) * n
 }
-
 pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
     let cos_theta = (-dot(uv, n)).min(1.);
     let r_out_perp = etai_over_etat * (uv + cos_theta * n);
