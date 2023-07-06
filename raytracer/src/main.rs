@@ -33,15 +33,13 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
             }
         }
         return Color::new(0., 0., 0.);
-        // let target = rec.p + random_in_hemisphere(rec.normal);
-        // return ray_color(Ray::new(rec.p, target - rec.p), world, depth - 1) * 0.5;
     }
     let t = 0.5 * (r.direction().unit().y + 1.);
     Color::new(1., 1., 1.) * (1. - t) + Color::new(0.5, 0.7, 1.) * t
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image14.jpg");
+    let path = std::path::Path::new("output/book1/image15.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -64,8 +62,8 @@ fn main() {
     // World
     let mut world = HittableList::new();
 
-    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
-    let material_center = Dielectric::new(1.5);
+    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.));
+    let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
     let material_left = Dielectric::new(1.5);
     let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 1.);
 
