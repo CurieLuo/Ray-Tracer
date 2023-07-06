@@ -41,7 +41,7 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image11.jpg");
+    let path = std::path::Path::new("output/book1/image12.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -66,8 +66,8 @@ fn main() {
 
     let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
     let material_center = Lambertian::new(Color::new(0.7, 0.3, 0.3));
-    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8));
-    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2));
+    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8), 0.3);
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 1.);
 
     world.add(Arc::new(Sphere::new(
         Point3::new(0., -100.5, -1.),
@@ -111,8 +111,8 @@ fn main() {
             pixel_color *= 256.;
             let (r, g, b) = (pixel_color.get(0), pixel_color.get(1), pixel_color.get(2));
             *pixel = image::Rgb([r as u8, g as u8, b as u8]);
+            progress.inc(1);
         }
-        progress.inc(1);
     }
     progress.finish();
 
