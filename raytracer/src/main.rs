@@ -5,9 +5,10 @@ use std::{fs::File, process::exit};
 
 use camera::*;
 use hittable::*;
-use hittable_list::*;
-use material::*;
-use sphere::*;
+// use hittable_list::*;
+// use material::*;
+use scene::*;
+// use sphere::*;
 use utility::*;
 
 mod camera;
@@ -15,6 +16,7 @@ mod hittable;
 mod hittable_list;
 mod material;
 mod ray;
+mod scene;
 mod sphere;
 mod utility;
 mod vec3;
@@ -39,15 +41,15 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image20.jpg");
+    let path = std::path::Path::new("output/book1/image21.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
     // Image
-    let aspect_ratio: f64 = 16.0 / 9.0;
-    let width: u32 = 400;
+    let aspect_ratio: f64 = 3. / 2.;
+    let width: u32 = 1200;
     let height: u32 = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel: i32 = 100;
+    let samples_per_pixel: i32 = 500;
     let max_depth: i32 = 50;
     let quality: u8 = 100;
     let mut img: RgbImage = ImageBuffer::new(width, height);
@@ -60,45 +62,14 @@ fn main() {
     };
 
     // World
-    let mut world = HittableList::new();
-
-    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.));
-    let material_center = Lambertian::new(Color::new(0.1, 0.2, 0.5));
-    let material_left = Dielectric::new(1.5);
-    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2), 0.);
-
-    world.add(Arc::new(Sphere::new(
-        Point3::new(0., -100.5, -1.),
-        100.,
-        Arc::new(material_ground),
-    )));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(0., 0., -1.),
-        0.5,
-        Arc::new(material_center),
-    )));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(-1., 0., -1.),
-        0.5,
-        Arc::new(material_left),
-    )));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(-1., 0., -1.),
-        -0.45,
-        Arc::new(material_left),
-    )));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(1., 0., -1.),
-        0.5,
-        Arc::new(material_right),
-    )));
+    let world = random_scene();
 
     // Camera
-    let lookfrom = Point3::new(3., 3., 2.);
-    let lookat = Point3::new(0., 0., -1.);
+    let lookfrom = Point3::new(13., 2., 3.);
+    let lookat = Point3::new(0., 0., 0.);
     let vup = Vec3::new(0., 1., 0.);
-    let dist_to_focus = (lookfrom - lookat).length();
-    let aperture = 2.;
+    let dist_to_focus = 10.;
+    let aperture = 0.1;
     let cam = Camera::new(
         lookfrom,
         lookat,
