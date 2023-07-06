@@ -3,7 +3,7 @@ use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssi
 use crate::utility::randrange;
 
 pub type Point3 = Vec3;
-pub type Color3 = Vec3;
+pub type Color = Vec3;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Vec3 {
@@ -29,6 +29,10 @@ impl Vec3 {
         *self / self.len()
     }
 
+    // pub fn dot(self, rhs: Self) -> f64 {
+    //     self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+    // }
+
     pub fn get(&self, i: i32) -> f64 {
         match i {
             0 => self.x,
@@ -52,6 +56,19 @@ impl Vec3 {
             randrange(min, max),
         )
     }
+
+    pub fn near_zero(&self) -> bool {
+        const S: f64 = 1e-8;
+        self.x.abs() < S && self.y.abs() < S && self.z.abs() < S
+    }
+}
+
+pub fn dot(lhs: Vec3, rhs: Vec3) -> f64 {
+    lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z
+}
+
+pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - 2. * dot(v, n) * n
 }
 
 pub fn random_in_unit_sphere() -> Vec3 {
@@ -63,18 +80,18 @@ pub fn random_in_unit_sphere() -> Vec3 {
     }
 }
 
-// pub fn random_unit_vector() -> Vec3 {
-//     random_in_unit_sphere().unit()
-// }
-
-pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-    let in_unit_sphere = random_in_unit_sphere();
-    if in_unit_sphere * normal > 0. {
-        in_unit_sphere
-    } else {
-        -in_unit_sphere
-    }
+pub fn random_unit_vector() -> Vec3 {
+    random_in_unit_sphere().unit()
 }
+
+// pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+//     let in_unit_sphere = random_in_unit_sphere();
+//     if dot(in_unit_sphere, normal) > 0. {
+//         in_unit_sphere
+//     } else {
+//         -in_unit_sphere
+//     }
+// }
 
 impl Neg for Vec3 {
     type Output = Self;
@@ -113,11 +130,10 @@ impl SubAssign for Vec3 {
     }
 }
 
-// dot product
 impl Mul for Vec3 {
-    type Output = f64;
+    type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
-        self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
+        Self::new(self.x * rhs.x, self.y * rhs.y, self.z * rhs.z)
     }
 }
 
@@ -125,6 +141,12 @@ impl Mul<f64> for Vec3 {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
         Self::new(self.x * rhs, self.y * rhs, self.z * rhs)
+    }
+}
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3::new(rhs.x * self, rhs.y * self, rhs.z * self)
     }
 }
 

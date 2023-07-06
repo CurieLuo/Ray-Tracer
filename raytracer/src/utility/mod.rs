@@ -1,5 +1,8 @@
 pub use super::{ray::*, vec3::*};
-pub use std::f64::{consts::PI, INFINITY};
+pub use std::{
+    f64::{consts::PI, INFINITY},
+    sync::Arc,
+};
 
 pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
     if x < min {

@@ -1,34 +1,43 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
-use std::{fs::File, process::exit, sync::Arc};
+use std::{fs::File, process::exit};
 
 use camera::*;
 use hittable::*;
 use hittable_list::*;
+use material::*;
 use sphere::*;
 use utility::*;
 
 mod camera;
 mod hittable;
 mod hittable_list;
+mod material;
 mod ray;
 mod sphere;
 mod utility;
 mod vec3;
 
-fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color3 {
+fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
     if depth <= 0 {
-        return Color3::new(0., 0., 0.);
+        return Color::new(0., 0., 0.);
     }
-
-    let mut rec = HitRecord::default();
+    let mut rec: HitRecord = HitRecord::default();
     if world.hit(r, 0.001, INFINITY, &mut rec) {
-        let target = rec.p + random_in_hemisphere(rec.normal);
-        return ray_color(Ray::new(rec.p, target - rec.p), world, depth - 1) * 0.5;
+        let mut scattered = Ray::default();
+        let mut attenuation = Color::default();
+        if let Some(mat) = rec.mat_ptr.clone() {
+            if mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
+                return attenuation * ray_color(scattered, world, depth - 1);
+            }
+        }
+        return Color::new(0., 0., 0.);
+        // let target = rec.p + random_in_hemisphere(rec.normal);
+        // return ray_color(Ray::new(rec.p, target - rec.p), world, depth - 1) * 0.5;
     }
     let t = 0.5 * (r.direction().unit().y + 1.);
-    Color3::new(1., 1., 1.) * (1. - t) + Color3::new(0.5, 0.7, 1.) * t
+    Color::new(1., 1., 1.) * (1. - t) + Color::new(0.5, 0.7, 1.) * t
 }
 
 fn main() {
@@ -54,8 +63,32 @@ fn main() {
 
     // World
     let mut world = HittableList::new();
-    world.add(Arc::new(Sphere::new(Point3::new(0., 0., -1.), 0.5)));
-    world.add(Arc::new(Sphere::new(Point3::new(0., -100.5, -1.), 100.)));
+
+    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
+    let material_center = Lambertian::new(Color::new(0.7, 0.3, 0.3));
+    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8));
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2));
+
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0., -100.5, -1.),
+        100.,
+        Arc::new(material_ground),
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0., 0., -1.),
+        0.5,
+        Arc::new(material_center),
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(-1., 0., -1.),
+        0.5,
+        Arc::new(material_left),
+    )));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(1., 0., -1.),
+        0.5,
+        Arc::new(material_right),
+    )));
 
     // Camera
     let cam = Camera::new(aspect_ratio);
@@ -64,7 +97,7 @@ fn main() {
     for j in (0..height).rev() {
         for i in 0..width {
             let pixel = img.get_pixel_mut(i, height - 1 - j);
-            let mut pixel_color = Color3::default();
+            let mut pixel_color = Color::default();
             for _s in 0..samples_per_pixel {
                 let u = ((i as f64) + random()) / ((width - 1) as f64);
                 let v = ((j as f64) + random()) / ((height - 1) as f64);
