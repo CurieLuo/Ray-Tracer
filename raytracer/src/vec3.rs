@@ -25,13 +25,10 @@ impl Vec3 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
+    ///! bug: divide by 0
     pub fn unit(&self) -> Self {
         *self / self.length()
     }
-
-    // pub fn dot(self, rhs: Self) -> f64 {
-    //     self.x * rhs.x + self.y * rhs.y + self.z * rhs.z
-    // }
 
     pub fn get(&self, i: i32) -> f64 {
         match i {
@@ -99,8 +96,7 @@ pub fn random_unit_vector() -> Vec3 {
     let r = (1. - z * z).sqrt();
     Vec3::new(r * a.cos(), r * a.sin(), z)
     //method 2: Normal Distribution
-    //method 3:
-    // random_in_unit_sphere().unit()
+    //method 3: random_in_unit_sphere().unit()
 }
 
 // pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
@@ -111,6 +107,15 @@ pub fn random_unit_vector() -> Vec3 {
 //         -in_unit_sphere
 //     }
 // }
+
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let p = Vec3::new(randrange(-1., 1.), randrange(-1., 1.), 0.);
+        if p.length_squared() < 1. {
+            return p;
+        }
+    }
+}
 
 impl Neg for Vec3 {
     type Output = Self;
