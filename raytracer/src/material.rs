@@ -46,7 +46,7 @@ impl Metal {
     pub fn new(albedo: Color, f: f64) -> Self {
         Metal {
             albedo,
-            fuzz: if f < 1. { f } else { 1. },
+            fuzz: f.min(1.),
         }
     }
 }
@@ -63,5 +63,34 @@ impl Material for Metal {
         *attenuation = self.albedo;
 
         dot(scattered.direction(), rec.normal) > 0.
+    }
+}
+
+#[derive(Clone, Copy, Default)]
+pub struct Dielectric {
+    ir: f64, // Index of Refraction
+}
+impl Dielectric {
+    pub fn new(ir: f64) -> Self {
+        Self { ir }
+    }
+}
+impl Material for Dielectric {
+    fn scatter(
+        &self,
+        r_in: Ray,
+        rec: &HitRecord,
+        attenuation: &mut Color,
+        scattered: &mut Ray,
+    ) -> bool {
+        *attenuation = Color::new(1., 1., 1.);
+        let refraction_ratio = if rec.front_face {
+            1. / self.ir
+        } else {
+            self.ir
+        };
+        let refracted = refract(r_in.direction().unit(), rec.normal, refraction_ratio);
+        *scattered = Ray::new(rec.p, refracted);
+        true
     }
 }

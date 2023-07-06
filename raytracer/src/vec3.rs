@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-use crate::utility::randrange;
+use crate::utility::{randrange, PI};
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;
@@ -17,16 +17,16 @@ impl Vec3 {
         Self { x, y, z }
     }
 
-    pub fn len_squared(&self) -> f64 {
+    pub fn length_squared(&self) -> f64 {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
-    pub fn len(&self) -> f64 {
+    pub fn length(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
     }
 
     pub fn unit(&self) -> Self {
-        *self / self.len()
+        *self / self.length()
     }
 
     // pub fn dot(self, rhs: Self) -> f64 {
@@ -71,17 +71,30 @@ pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2. * dot(v, n) * n
 }
 
+pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
+    let cos_theta = (-dot(uv, n)).min(1.);
+    let r_out_perp = etai_over_etat * (uv + cos_theta * n);
+    let r_out_parallel = -((1. - r_out_perp.length_squared()).abs().sqrt()) * n;
+    r_out_perp + r_out_parallel
+}
+
 pub fn random_in_unit_sphere() -> Vec3 {
     loop {
         let p = Vec3::randrange(-1., 1.);
-        if p.len_squared() < 1. {
+        if p.length_squared() < 1. {
             return p;
         }
     }
 }
 
 pub fn random_unit_vector() -> Vec3 {
-    random_in_unit_sphere().unit()
+    let a = randrange(0., 2. * PI);
+    let z = randrange(-1., 1.);
+    let r = (1. - z * z).sqrt();
+    Vec3::new(r * a.cos(), r * a.sin(), z)
+    //method 2: Normal Distribution
+    //method 3:
+    // random_in_unit_sphere().unit()
 }
 
 // pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
