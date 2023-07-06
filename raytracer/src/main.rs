@@ -39,7 +39,7 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image15.jpg");
+    let path = std::path::Path::new("output/book1/image16.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -83,6 +83,11 @@ fn main() {
         Arc::new(material_left),
     )));
     world.add(Arc::new(Sphere::new(
+        Point3::new(-1., 0., -1.),
+        -0.4,
+        Arc::new(material_left),
+    )));
+    world.add(Arc::new(Sphere::new(
         Point3::new(1., 0., -1.),
         0.5,
         Arc::new(material_right),
@@ -92,7 +97,7 @@ fn main() {
     let cam = Camera::new(aspect_ratio);
 
     // Render
-    for j in (0..height).rev() {
+    for j in 0..height {
         for i in 0..width {
             let pixel = img.get_pixel_mut(i, height - 1 - j);
             let mut pixel_color = Color::default();
