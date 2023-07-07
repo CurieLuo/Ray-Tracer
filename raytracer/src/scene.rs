@@ -1,6 +1,8 @@
 use crate::{hittable_list::*, material::*, sphere::*, utility::*};
 
 pub fn random_scene() -> HittableList {
+    let time0 = 0.;
+    let time1 = 1.;
     let mut world = HittableList::new();
     let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
     world.add(Arc::new(Sphere::new(
@@ -23,7 +25,15 @@ pub fn random_scene() -> HittableList {
                     // diffuse
                     let albedo = Color::random() * Color::random();
                     sphere_material = Arc::new(Lambertian::new(albedo));
-                    world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                    let center2 = center + Vec3::new(0., randrange(0., 0.5), 0.);
+                    world.add(Arc::new(MovingSphere::new(
+                        center,
+                        center2,
+                        time0,
+                        time1,
+                        0.2,
+                        sphere_material,
+                    )));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::randrange(0.5, 1.);

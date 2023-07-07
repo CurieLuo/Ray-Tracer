@@ -41,16 +41,18 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image21.jpg");
+    let path = std::path::Path::new("output/book2/image1.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
     // Image
-    let aspect_ratio: f64 = 3. / 2.;
-    let width: u32 = 1200;
+    let aspect_ratio: f64 = 16. / 9.;
+    let width: u32 = 400;
     let height: u32 = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel: i32 = 500;
+    let samples_per_pixel: i32 = 100;
     let max_depth: i32 = 50;
+    let time0 = 0.;
+    let time1 = 1.;
     let quality: u8 = 100;
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
@@ -88,7 +90,7 @@ fn main() {
             for _s in 0..samples_per_pixel {
                 let u = ((i as f64) + random()) / ((width - 1) as f64);
                 let v = ((j as f64) + random()) / ((height - 1) as f64);
-                let ray = cam.get_ray(u, v);
+                let ray = cam.get_ray(u, v, time0, time1);
                 pixel_color += ray_color(ray, &world, max_depth);
             }
             pixel_color /= samples_per_pixel as f64;
