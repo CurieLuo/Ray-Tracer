@@ -11,6 +11,8 @@ use scene::*;
 // use sphere::*;
 use utility::*;
 
+mod aabb;
+mod bvh;
 mod camera;
 mod hittable;
 mod hittable_list;
@@ -18,21 +20,20 @@ mod material;
 mod ray;
 mod scene;
 mod sphere;
+mod texture;
 mod utility;
 mod vec3;
 
-fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
     if depth <= 0 {
         return Color::new(0., 0., 0.);
     }
-    let mut rec: HitRecord = HitRecord::default();
-    if world.hit(r, 0.001, INFINITY, &mut rec) {
+    if let Some(rec) = world.hit(r, 0.001, INFINITY) {
         let mut scattered = Ray::default();
         let mut attenuation = Color::default();
-        if let Some(mat) = rec.mat_ptr.clone() {
-            if mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
-                return attenuation * ray_color(scattered, world, depth - 1);
-            }
+        let mat = rec.mat_ptr.clone();
+        if mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
+            return attenuation * ray_color(&scattered, world, depth - 1);
         }
         return Color::new(0., 0., 0.);
     }
@@ -41,7 +42,7 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> Color {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image1.jpg");
+    let path = std::path::Path::new("output/book2/image2.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -91,7 +92,7 @@ fn main() {
                 let u = ((i as f64) + random()) / ((width - 1) as f64);
                 let v = ((j as f64) + random()) / ((height - 1) as f64);
                 let ray = cam.get_ray(u, v, time0, time1);
-                pixel_color += ray_color(ray, &world, max_depth);
+                pixel_color += ray_color(&ray, &world, max_depth);
             }
             pixel_color /= samples_per_pixel as f64;
             for _i in 0..3 {

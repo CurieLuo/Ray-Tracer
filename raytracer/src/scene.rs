@@ -1,14 +1,18 @@
-use crate::{hittable_list::*, material::*, sphere::*, utility::*};
+use crate::{hittable_list::*, material::*, sphere::*, texture::CheckerTexture, utility::*};
 
 pub fn random_scene() -> HittableList {
     let time0 = 0.;
     let time1 = 1.;
     let mut world = HittableList::new();
-    let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    // let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let checker = Arc::new(CheckerTexture::new_color(
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
     world.add(Arc::new(Sphere::new(
         Point3::new(0., -1000., 0.),
         1000.,
-        ground_material,
+        Arc::new(Lambertian::new_texture(checker)),
     )));
 
     for a in -11..11 {

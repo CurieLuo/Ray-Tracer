@@ -1,28 +1,33 @@
-use crate::{hittable::HitRecord, utility::*};
+use crate::{hittable::HitRecord, texture::*, utility::*};
 
 pub trait Material {
     fn scatter(
         &self,
-        r_in: Ray,
+        r_in: &Ray,
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool;
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone)]
 pub struct Lambertian {
-    pub albedo: Color,
+    pub albedo: Arc<dyn Texture>,
 }
 impl Lambertian {
-    pub fn new(albedo: Color) -> Self {
+    pub fn new(a: Color) -> Self {
+        Self {
+            albedo: Arc::new(SolidColor::new(a)),
+        }
+    }
+    pub fn new_texture(albedo: Arc<dyn Texture>) -> Self {
         Self { albedo }
     }
 }
 impl Material for Lambertian {
     fn scatter(
         &self,
-        r_in: Ray,
+        r_in: &Ray,
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
@@ -33,12 +38,12 @@ impl Material for Lambertian {
             scatter_direction = rec.normal;
         }
         *scattered = Ray::new(rec.p, scatter_direction, r_in.time());
-        *attenuation = self.albedo;
+        *attenuation = self.albedo.value(rec.u, rec.v, rec.p);
         true
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone)]
 pub struct Metal {
     pub albedo: Color,
     pub fuzz: f64,
@@ -54,7 +59,7 @@ impl Metal {
 impl Material for Metal {
     fn scatter(
         &self,
-        r_in: Ray,
+        r_in: &Ray,
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
@@ -71,7 +76,7 @@ impl Material for Metal {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone)]
 pub struct Dielectric {
     ir: f64, // Index of Refraction
 }
@@ -88,7 +93,7 @@ impl Dielectric {
 impl Material for Dielectric {
     fn scatter(
         &self,
-        r_in: Ray,
+        r_in: &Ray,
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,

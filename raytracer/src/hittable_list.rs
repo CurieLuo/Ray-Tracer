@@ -1,4 +1,4 @@
-use crate::{hittable::*, utility::*};
+use crate::{aabb::*, hittable::*, utility::*};
 
 #[derive(Clone)]
 pub struct HittableList {
@@ -22,19 +22,37 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
-        let mut temp_rec: HitRecord = HitRecord::default();
-        let mut hit_anything = false;
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut rec = None;
         let mut closest_so_far = t_max;
 
         for object in self.objects.iter() {
-            if object.hit(r, t_min, closest_so_far, &mut temp_rec) {
-                hit_anything = true;
+            if let Some(temp_rec) = object.hit(r, t_min, closest_so_far) {
                 closest_so_far = temp_rec.t;
-                *rec = temp_rec.clone();
+                rec = Some(temp_rec.clone());
             }
         }
 
-        hit_anything
+        rec
+    }
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+        if self.objects.is_empty() {
+            return None;
+        }
+        let mut first_box = true;
+        let mut output_box = Aabb::default();
+        for object in self.objects.iter() {
+            if let Some(temp_box) = object.bounding_box(time0, time1) {
+                output_box = if first_box {
+                    first_box = false;
+                    temp_box
+                } else {
+                    surrounding_box(&output_box, &temp_box)
+                };
+            } else {
+                return None;
+            }
+        }
+        Some(output_box)
     }
 }
