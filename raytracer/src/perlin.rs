@@ -80,6 +80,22 @@ impl Perlin {
 
         accum
     }
+
+    pub fn turb(&self, mut p: Point3, depth: i32) -> f64 {
+        let mut accum = 0.;
+        let mut weight = 1.;
+
+        for _ in 0..depth {
+            accum += weight * self.noise(p);
+            weight *= 0.5;
+            p *= 2.;
+        }
+
+        accum.abs()
+    }
+    pub fn turb7(&self, p: Point3) -> f64 {
+        self.turb(p, 7)
+    }
 }
 
 pub struct NoiseTexture {
@@ -98,6 +114,6 @@ impl NoiseTexture {
 
 impl Texture for NoiseTexture {
     fn value(&self, _u: f64, _v: f64, p: Point3) -> Color {
-        Color::new(1., 1., 1.) * 0.5 * (1. + self.noise.noise(p * self.scale))
+        Color::new(1., 1., 1.) * self.noise.turb7(p * self.scale)
     }
 }
