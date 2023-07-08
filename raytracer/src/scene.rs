@@ -1,27 +1,46 @@
 use crate::bvh::*;
-use crate::{hittable_list::*, material::*, sphere::*, texture::*, utility::*};
+use crate::{hittable_list::*, material::*, perlin::*, sphere::*, texture::*, utility::*};
+
+pub fn two_perlin_spheres() -> HittableList {
+    let mut objects = HittableList::new();
+    let pertext = Arc::new(NoiseTexture::new());
+
+    objects.add(Arc::new(Sphere::new(
+        Point3::new(0., -1000., 0.),
+        1000.,
+        Arc::new(Lambertian::new_texture(pertext.clone())),
+    )));
+
+    objects.add(Arc::new(Sphere::new(
+        Point3::new(0., 2., 0.),
+        2.,
+        Arc::new(Lambertian::new_texture(pertext)),
+    )));
+
+    objects
+}
 
 pub fn two_spheres() -> HittableList {
-    let mut world = HittableList::new();
+    let mut objects = HittableList::new();
 
     let checker = Arc::new(CheckerTexture::new_color(
         Color::new(0.2, 0.3, 0.1),
         Color::new(0.9, 0.9, 0.9),
     ));
 
-    world.add(Arc::new(Sphere::new(
+    objects.add(Arc::new(Sphere::new(
         Point3::new(0.0, -10.0, 0.0),
         10.0,
         Arc::new(Lambertian::new_texture(checker.clone())),
     )));
 
-    world.add(Arc::new(Sphere::new(
+    objects.add(Arc::new(Sphere::new(
         Point3::new(0.0, 10.0, 0.0),
         10.0,
         Arc::new(Lambertian::new_texture(checker)),
     )));
 
-    world
+    objects
 }
 
 pub fn random_scene() -> HittableList {

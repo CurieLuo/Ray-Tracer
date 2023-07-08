@@ -17,6 +17,7 @@ mod camera;
 mod hittable;
 mod hittable_list;
 mod material;
+mod perlin;
 mod ray;
 mod scene;
 mod sphere;
@@ -42,7 +43,7 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image3.jpg");
+    let path = std::path::Path::new("output/book2/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -78,8 +79,13 @@ fn main() {
             lookat = Point3::new(0., 0., 0.);
             aperture = 0.1;
         }
-        _ => {
+        2 => {
             world = two_spheres();
+            lookfrom = Point3::new(13., 2., 3.);
+            lookat = Point3::new(0., 0., 0.);
+        }
+        _ => {
+            world = two_perlin_spheres();
             lookfrom = Point3::new(13., 2., 3.);
             lookat = Point3::new(0., 0., 0.);
         }
