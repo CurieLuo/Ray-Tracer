@@ -23,14 +23,11 @@ pub struct CheckerTexture {
     pub odd: Arc<dyn Texture>,
 }
 impl CheckerTexture {
-    // pub fn new(even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
-    //     Self { even, odd }
-    // }
+    pub fn new(even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
+        Self { even, odd }
+    }
     pub fn new_color(c0: Color, c1: Color) -> Self {
-        Self {
-            even: Arc::new(SolidColor::new(c0)),
-            odd: Arc::new(SolidColor::new(c1)),
-        }
+        Self::new(Arc::new(SolidColor::new(c0)), Arc::new(SolidColor::new(c1)))
     }
 }
 impl Texture for CheckerTexture {

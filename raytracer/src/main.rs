@@ -42,7 +42,7 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image2.jpg");
+    let path = std::path::Path::new("output/book2/image3.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -64,20 +64,34 @@ fn main() {
         ProgressBar::new((height * width) as u64)
     };
 
-    // World
-    let world = random_scene();
+    // World & Camera
+    let lookfrom;
+    let lookat;
+    let vfov = 20.;
+    let mut aperture = 0.;
 
-    // Camera
-    let lookfrom = Point3::new(13., 2., 3.);
-    let lookat = Point3::new(0., 0., 0.);
+    let world;
+    match 0 {
+        1 => {
+            world = random_scene();
+            lookfrom = Point3::new(13., 2., 3.);
+            lookat = Point3::new(0., 0., 0.);
+            aperture = 0.1;
+        }
+        _ => {
+            world = two_spheres();
+            lookfrom = Point3::new(13., 2., 3.);
+            lookat = Point3::new(0., 0., 0.);
+        }
+    }
+
     let vup = Vec3::new(0., 1., 0.);
     let dist_to_focus = 10.;
-    let aperture = 0.1;
     let cam = Camera::new(
         lookfrom,
         lookat,
         vup,
-        20.,
+        vfov,
         aspect_ratio,
         aperture,
         dist_to_focus,

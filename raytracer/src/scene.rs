@@ -1,19 +1,33 @@
-use crate::{hittable_list::*, material::*, sphere::*, texture::CheckerTexture, utility::*};
+use crate::bvh::*;
+use crate::{hittable_list::*, material::*, sphere::*, texture::*, utility::*};
+
+pub fn two_spheres() -> HittableList {
+    let mut world = HittableList::new();
+
+    let checker = Arc::new(CheckerTexture::new_color(
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        Arc::new(Lambertian::new_texture(checker.clone())),
+    )));
+
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        Arc::new(Lambertian::new_texture(checker)),
+    )));
+
+    world
+}
 
 pub fn random_scene() -> HittableList {
     let time0 = 0.;
     let time1 = 1.;
     let mut world = HittableList::new();
-    // let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    let checker = Arc::new(CheckerTexture::new_color(
-        Color::new(0.2, 0.3, 0.1),
-        Color::new(0.9, 0.9, 0.9),
-    ));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(0., -1000., 0.),
-        1000.,
-        Arc::new(Lambertian::new_texture(checker)),
-    )));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -74,5 +88,19 @@ pub fn random_scene() -> HittableList {
         material3,
     )));
 
-    world
+    let mut world_with_ground = HittableList::new();
+    world_with_ground.add(Arc::new(BvhNode::new(&world, time0, time1)));
+
+    //// let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let checker = Arc::new(CheckerTexture::new_color(
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+    world_with_ground.add(Arc::new(Sphere::new(
+        Point3::new(0., -1000., 0.),
+        1000.,
+        Arc::new(Lambertian::new_texture(checker)),
+    )));
+
+    world_with_ground
 }
