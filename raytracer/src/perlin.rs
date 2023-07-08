@@ -2,7 +2,7 @@ use crate::{texture::*, utility::*};
 use rand::prelude::SliceRandom;
 
 pub struct Perlin {
-    ranfloat: Box<[f64]>,
+    ranvec: Box<[Vec3]>,
     perm_x: Box<[usize]>,
     perm_y: Box<[usize]>,
     perm_z: Box<[usize]>,
@@ -12,9 +12,9 @@ impl Perlin {
     const POINT_COUNT: usize = 256;
 
     pub fn new() -> Self {
-        let mut ranfloat = vec![0.; Self::POINT_COUNT];
-        for x in &mut ranfloat {
-            *x = random();
+        let mut ranvec = vec![Vec3::default(); Self::POINT_COUNT];
+        for x in &mut ranvec {
+            *x = Vec3::randrange(-1., 1.).unit();
         }
 
         let perm_x = Self::perlin_generate_perm();
@@ -22,7 +22,7 @@ impl Perlin {
         let perm_z = Self::perlin_generate_perm();
 
         Self {
-            ranfloat: ranfloat.into_boxed_slice(),
+            ranvec: ranvec.into_boxed_slice(),
             perm_x: perm_x.into_boxed_slice(),
             perm_y: perm_y.into_boxed_slice(),
             perm_z: perm_z.into_boxed_slice(),
@@ -39,21 +39,18 @@ impl Perlin {
     }
 
     pub fn noise(&self, p: Point3) -> f64 {
-        let mut u = p.x - p.x.floor();
-        let mut v = p.y - p.y.floor();
-        let mut w = p.z - p.z.floor();
-        u = u * u * (3. - 2. * u);
-        v = v * v * (3. - 2. * v);
-        w = w * w * (3. - 2. * w);
+        let u = p.x - p.x.floor();
+        let v = p.y - p.y.floor();
+        let w = p.z - p.z.floor();
         let i = p.x.floor() as i32;
         let j = p.y.floor() as i32;
         let k = p.z.floor() as i32;
-        let mut c = [[[0.; 2]; 2]; 2];
+        let mut c = [[[Vec3::default(); 2]; 2]; 2];
 
         for (di, ci) in c.iter_mut().enumerate() {
             for (dj, cij) in ci.iter_mut().enumerate() {
                 for (dk, cijk) in &mut cij.iter_mut().enumerate() {
-                    *cijk = self.ranfloat[self.perm_x[(i + di as i32) as usize & 255]
+                    *cijk = self.ranvec[self.perm_x[(i + di as i32) as usize & 255]
                         ^ self.perm_y[(j + dj as i32) as usize & 255]
                         ^ self.perm_z[(k + dk as i32) as usize & 255]];
                 }
@@ -63,16 +60,20 @@ impl Perlin {
         Self::trilinear_interp(&c, u, v, w)
     }
 
-    fn trilinear_interp(c: &[[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    fn trilinear_interp(c: &[[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+        let uu = u * u * (3. - 2. * u);
+        let vv = v * v * (3. - 2. * v);
+        let ww = w * w * (3. - 2. * w);
         let mut accum = 0.;
 
         for (i, ci) in c.iter().enumerate() {
             for (j, cij) in ci.iter().enumerate() {
                 for (k, cijk) in cij.iter().enumerate() {
-                    accum += (i as f64 * u + (1. - i as f64) * (1. - u))
-                        * (j as f64 * v + (1. - j as f64) * (1. - v))
-                        * (k as f64 * w + (1. - k as f64) * (1. - w))
-                        * cijk;
+                    let weight_v = Vec3::new(u - i as f64, v - j as f64, w - k as f64);
+                    accum += (i as f64 * uu + (1. - i as f64) * (1. - u))
+                        * (j as f64 * vv + (1. - j as f64) * (1. - v))
+                        * (k as f64 * ww + (1. - k as f64) * (1. - w))
+                        * dot(*cijk, weight_v);
                 }
             }
         }
@@ -97,6 +98,6 @@ impl NoiseTexture {
 
 impl Texture for NoiseTexture {
     fn value(&self, _u: f64, _v: f64, p: Point3) -> Color {
-        Color::new(1., 1., 1.) * self.noise.noise(p * self.scale)
+        Color::new(1., 1., 1.) * 0.5 * (1. + self.noise.noise(p * self.scale))
     }
 }
