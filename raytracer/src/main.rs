@@ -46,32 +46,23 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image17.jpg");
+    let path = std::path::Path::new("output/book2/image18.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
     // Image
-    let aspect_ratio: f64 = 16. / 9.;
-    let width: u32 = 400;
-    let height: u32 = (width as f64 / aspect_ratio) as u32;
+    let mut aspect_ratio: f64 = 16. / 9.;
+    let mut width: u32 = 400;
     let mut samples_per_pixel: i32 = 100;
     let max_depth: i32 = 50;
     let time0 = 0.;
     let time1 = 1.;
     let quality: u8 = 100;
-    let mut img: RgbImage = ImageBuffer::new(width, height);
-
-    // Progress Bar
-    let progress = if option_env!("CI").unwrap_or_default() == "true" {
-        ProgressBar::hidden()
-    } else {
-        ProgressBar::new((height * width) as u64)
-    };
 
     // World & Camera
     let mut lookfrom = Point3::new(13., 2., 3.);
     let mut lookat = Point3::new(0., 0., 0.);
-    let vfov = 20.;
+    let mut vfov = 20.;
     let mut aperture = 0.;
     let mut background = Color::new(0.70, 0.80, 1.00);
 
@@ -90,14 +81,27 @@ fn main() {
         4 => {
             world = earth();
         }
-        _ => {
+        5 => {
             world = simple_light();
             samples_per_pixel = 400;
             background = Color::new(0., 0., 0.);
             lookfrom = Point3::new(26., 3., 6.);
             lookat = Point3::new(0., 2., 0.);
         }
+        _ => {
+            world = cornell_box();
+            aspect_ratio = 1.;
+            width = 600;
+            samples_per_pixel = 200;
+            background = Color::new(0., 0., 0.);
+            lookfrom = Point3::new(278., 278., -800.);
+            lookat = Point3::new(278., 278., 0.);
+            vfov = 40.;
+        }
     }
+
+    let height: u32 = (width as f64 / aspect_ratio) as u32;
+    let mut img: RgbImage = ImageBuffer::new(width, height);
 
     let vup = Vec3::new(0., 1., 0.);
     let dist_to_focus = 10.;
@@ -110,6 +114,13 @@ fn main() {
         aperture,
         dist_to_focus,
     );
+
+    // Progress Bar
+    let progress = if option_env!("CI").unwrap_or_default() == "true" {
+        ProgressBar::hidden()
+    } else {
+        ProgressBar::new((height * width) as u64)
+    };
 
     // Render
     for j in 0..height {
