@@ -1,7 +1,7 @@
 use crate::{aabb::*, hittable::*, material::Material, utility::*};
 
 pub fn get_sphere_uv(p: Point3) -> (f64, f64) {
-    // p: a given point on the sphere of radius one, centered at the origin.
+    // p: a given point on the sphere of radius one, centered at the origin. (outward_normal)
     // u: returned value [0,1] of angle around the Y axis from X=-1.
     // v: returned value [0,1] of angle from Y=-1 to Y=+1.
     // <1 0 0> yields <0.50 0.50> <-1 0 0> yields <0.00 0.50>

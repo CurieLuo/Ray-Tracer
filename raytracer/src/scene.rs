@@ -1,5 +1,14 @@
 use crate::bvh::*;
-use crate::{hittable_list::*, material::*, perlin::*, sphere::*, texture::*, utility::*};
+use crate::{hittable_list::*, material::*, sphere::*, texture::*, utility::*};
+
+pub fn earth() -> HittableList {
+    let earth_texture = Arc::new(ImageTexture::new("earthmap.jpg"));
+    let earth_surface = Arc::new(Lambertian::new_texture(earth_texture));
+    let globe = Arc::new(Sphere::new(Point3::new(0., 0., 0.), 2., earth_surface));
+    let mut hittable_list = HittableList::new();
+    hittable_list.add(globe);
+    hittable_list
+}
 
 pub fn two_perlin_spheres() -> HittableList {
     let mut objects = HittableList::new();

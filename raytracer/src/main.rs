@@ -43,7 +43,7 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image13.jpg");
+    let path = std::path::Path::new("output/book2/image14.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -66,8 +66,8 @@ fn main() {
     };
 
     // World & Camera
-    let lookfrom;
-    let lookat;
+    let lookfrom = Point3::new(13., 2., 3.);
+    let lookat = Point3::new(0., 0., 0.);
     let vfov = 20.;
     let mut aperture = 0.;
 
@@ -75,19 +75,16 @@ fn main() {
     match 0 {
         1 => {
             world = random_scene();
-            lookfrom = Point3::new(13., 2., 3.);
-            lookat = Point3::new(0., 0., 0.);
             aperture = 0.1;
         }
         2 => {
             world = two_spheres();
-            lookfrom = Point3::new(13., 2., 3.);
-            lookat = Point3::new(0., 0., 0.);
+        }
+        3 => {
+            world = two_perlin_spheres();
         }
         _ => {
-            world = two_perlin_spheres();
-            lookfrom = Point3::new(13., 2., 3.);
-            lookat = Point3::new(0., 0., 0.);
+            world = earth();
         }
     }
 

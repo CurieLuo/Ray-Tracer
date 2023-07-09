@@ -1,11 +1,11 @@
-use crate::{texture::*, utility::*};
+use crate::utility::*;
 use rand::prelude::SliceRandom;
 
 pub struct Perlin {
-    ranvec: Box<[Vec3]>,
-    perm_x: Box<[usize]>,
-    perm_y: Box<[usize]>,
-    perm_z: Box<[usize]>,
+    ranvec: Vec<Vec3>,
+    perm_x: Vec<usize>,
+    perm_y: Vec<usize>,
+    perm_z: Vec<usize>,
 }
 
 impl Perlin {
@@ -22,10 +22,10 @@ impl Perlin {
         let perm_z = Self::perlin_generate_perm();
 
         Self {
-            ranvec: ranvec.into_boxed_slice(),
-            perm_x: perm_x.into_boxed_slice(),
-            perm_y: perm_y.into_boxed_slice(),
-            perm_z: perm_z.into_boxed_slice(),
+            ranvec,
+            perm_x,
+            perm_y,
+            perm_z,
         }
     }
 
@@ -95,25 +95,5 @@ impl Perlin {
     }
     pub fn turb7(&self, p: Point3) -> f64 {
         self.turb(p, 7)
-    }
-}
-
-pub struct NoiseTexture {
-    pub noise: Perlin,
-    pub scale: f64,
-}
-
-impl NoiseTexture {
-    pub fn new(scale: f64) -> Self {
-        Self {
-            noise: Perlin::new(),
-            scale,
-        }
-    }
-}
-
-impl Texture for NoiseTexture {
-    fn value(&self, _u: f64, _v: f64, p: Point3) -> Color {
-        Color::new(1., 1., 1.) * 0.5 * (1. + (self.scale * p.z + 10. * self.noise.turb7(p)).sin())
     }
 }
