@@ -1,4 +1,5 @@
 use crate::bvh::*;
+use crate::hittable::{RotateY, Translate};
 use crate::{
     aarect::*, cornell_box::*, hittable_list::*, material::*, sphere::*, texture::*, utility::*,
 };
@@ -32,16 +33,27 @@ pub fn cornell_box() -> HittableList {
         white.clone(),
     )));
 
-    objects.add(Arc::new(CornellBox::new(
-        Point3::new(130., 0., 65.),
-        Point3::new(295., 165., 230.),
+    let box1 = Arc::new(CornellBox::new(
+        Point3::new(0., 0., 0.),
+        Point3::new(165., 330., 165.),
         white.clone(),
-    )));
-    objects.add(Arc::new(CornellBox::new(
-        Point3::new(265., 0., 295.),
-        Point3::new(430., 330., 460.),
+    ));
+    let box1 = Arc::new(Translate::new(
+        Arc::new(RotateY::new(box1, 15.)),
+        Vec3::new(265., 0., 295.),
+    ));
+    objects.add(box1);
+
+    let box2 = Arc::new(CornellBox::new(
+        Point3::new(0., 0., 0.),
+        Point3::new(165., 165., 165.),
         white,
-    )));
+    ));
+    let box2 = Arc::new(Translate::new(
+        Arc::new(RotateY::new(box2, -18.)),
+        Vec3::new(130., 0., 65.),
+    ));
+    objects.add(box2);
 
     objects
 }

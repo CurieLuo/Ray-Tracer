@@ -54,6 +54,7 @@ impl BvhNode {
             }
         }
         //? unwrap might cause error
+        //should use Option<box>, where None stands for infinity (R^3)
         let box_left = left.bounding_box(time0, time1).unwrap();
         let box_right = right.bounding_box(time0, time1).unwrap();
         Self {
