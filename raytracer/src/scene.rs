@@ -13,11 +13,16 @@ pub fn simple_light() -> HittableList {
 
     objects.add(Arc::new(Sphere::new(
         Point3::new(0., 2., 0.),
-        2.0,
+        2.,
         Arc::new(Lambertian::new_texture(pertext)),
     )));
 
     let difflight = Arc::new(DiffuseLight::new_color(Color::new(4., 4., 4.)));
+    objects.add(Arc::new(Sphere::new(
+        Point3::new(0., 7., 0.),
+        2.,
+        difflight.clone(),
+    )));
     objects.add(Arc::new(XYRect::new(3., 5., 1., 3., -2., difflight)));
 
     objects
