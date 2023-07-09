@@ -1,5 +1,27 @@
 use crate::bvh::*;
-use crate::{hittable_list::*, material::*, sphere::*, texture::*, utility::*};
+use crate::{aarect::*, hittable_list::*, material::*, sphere::*, texture::*, utility::*};
+
+pub fn simple_light() -> HittableList {
+    let mut objects = HittableList::new();
+
+    let pertext = Arc::new(NoiseTexture::new(4.));
+    objects.add(Arc::new(Sphere::new(
+        Point3::new(0., -1000., 0.),
+        1000.,
+        Arc::new(Lambertian::new_texture(pertext.clone())),
+    )));
+
+    objects.add(Arc::new(Sphere::new(
+        Point3::new(0., 2., 0.),
+        2.0,
+        Arc::new(Lambertian::new_texture(pertext)),
+    )));
+
+    let difflight = Arc::new(DiffuseLight::new_color(Color::new(4., 4., 4.)));
+    objects.add(Arc::new(XYRect::new(3., 5., 1., 3., -2., difflight)));
+
+    objects
+}
 
 pub fn earth() -> HittableList {
     let earth_texture = Arc::new(ImageTexture::new("earthmap.jpg"));

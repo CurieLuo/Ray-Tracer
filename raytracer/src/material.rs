@@ -8,6 +8,9 @@ pub trait Material {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool;
+    fn emitted(&self, _u: f64, _v: f64, _p: Point3) -> Color {
+        Color::new(0., 0., 0.)
+    }
 }
 
 #[derive(Clone)]
@@ -116,5 +119,33 @@ impl Material for Dielectric {
             };
         *scattered = Ray::new(rec.p, direction, r_in.time());
         true
+    }
+}
+
+pub struct DiffuseLight {
+    pub emit: Arc<dyn Texture>,
+}
+
+impl DiffuseLight {
+    pub fn new(emit: Arc<dyn Texture>) -> Self {
+        Self { emit }
+    }
+    pub fn new_color(c: Color) -> Self {
+        Self::new(Arc::new(SolidColor::new(c)))
+    }
+}
+
+impl Material for DiffuseLight {
+    fn scatter(
+        &self,
+        _r_in: &Ray,
+        _rec: &HitRecord,
+        _attenuation: &mut Color,
+        _scattered: &mut Ray,
+    ) -> bool {
+        false
+    }
+    fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
+        self.emit.value(u, v, p)
     }
 }

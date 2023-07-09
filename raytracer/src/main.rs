@@ -12,6 +12,7 @@ use scene::*;
 use utility::*;
 
 mod aabb;
+mod aarect;
 mod bvh;
 mod camera;
 mod hittable;
@@ -25,7 +26,7 @@ mod texture;
 mod utility;
 mod vec3;
 
-fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Color {
     if depth <= 0 {
         return Color::new(0., 0., 0.);
     }
@@ -33,17 +34,19 @@ fn ray_color(r: &Ray, world: &dyn Hittable, depth: i32) -> Color {
         let mut scattered = Ray::default();
         let mut attenuation = Color::default();
         let mat = rec.mat_ptr.clone();
+        let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
         if mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
-            return attenuation * ray_color(&scattered, world, depth - 1);
+            emitted + attenuation * ray_color(&scattered, background, world, depth - 1)
+        } else {
+            emitted
         }
-        return Color::new(0., 0., 0.);
+    } else {
+        background
     }
-    let t = 0.5 * (r.direction().unit().y + 1.);
-    Color::new(1., 1., 1.) * (1. - t) + Color::new(0.5, 0.7, 1.) * t
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image14.jpg");
+    let path = std::path::Path::new("output/book2/image15.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -51,7 +54,7 @@ fn main() {
     let aspect_ratio: f64 = 16. / 9.;
     let width: u32 = 400;
     let height: u32 = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel: i32 = 100;
+    let mut samples_per_pixel: i32 = 100;
     let max_depth: i32 = 50;
     let time0 = 0.;
     let time1 = 1.;
@@ -66,10 +69,11 @@ fn main() {
     };
 
     // World & Camera
-    let lookfrom = Point3::new(13., 2., 3.);
-    let lookat = Point3::new(0., 0., 0.);
+    let mut lookfrom = Point3::new(13., 2., 3.);
+    let mut lookat = Point3::new(0., 0., 0.);
     let vfov = 20.;
     let mut aperture = 0.;
+    let mut background = Color::new(0.70, 0.80, 1.00);
 
     let world;
     match 0 {
@@ -83,8 +87,15 @@ fn main() {
         3 => {
             world = two_perlin_spheres();
         }
-        _ => {
+        4 => {
             world = earth();
+        }
+        _ => {
+            world = simple_light();
+            samples_per_pixel = 400;
+            background = Color::new(0., 0., 0.);
+            lookfrom = Point3::new(26., 3., 6.);
+            lookat = Point3::new(0., 2., 0.);
         }
     }
 
@@ -109,7 +120,7 @@ fn main() {
                 let u = ((i as f64) + random()) / ((width - 1) as f64);
                 let v = ((j as f64) + random()) / ((height - 1) as f64);
                 let ray = cam.get_ray(u, v, time0, time1);
-                pixel_color += ray_color(&ray, &world, max_depth);
+                pixel_color += ray_color(&ray, background, &world, max_depth);
             }
             pixel_color /= samples_per_pixel as f64;
             for _i in 0..3 {
