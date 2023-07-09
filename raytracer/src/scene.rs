@@ -1,5 +1,7 @@
 use crate::bvh::*;
-use crate::{aarect::*, hittable_list::*, material::*, sphere::*, texture::*, utility::*};
+use crate::{
+    aarect::*, cornell_box::*, hittable_list::*, material::*, sphere::*, texture::*, utility::*,
+};
 
 pub fn cornell_box() -> HittableList {
     let mut objects = HittableList::new();
@@ -21,7 +23,25 @@ pub fn cornell_box() -> HittableList {
         555.,
         white.clone(),
     )));
-    objects.add(Arc::new(XYRect::new(0., 555., 0., 555., 555., white)));
+    objects.add(Arc::new(XYRect::new(
+        0.,
+        555.,
+        0.,
+        555.,
+        555.,
+        white.clone(),
+    )));
+
+    objects.add(Arc::new(CornellBox::new(
+        Point3::new(130., 0., 65.),
+        Point3::new(295., 165., 230.),
+        white.clone(),
+    )));
+    objects.add(Arc::new(CornellBox::new(
+        Point3::new(265., 0., 295.),
+        Point3::new(430., 330., 460.),
+        white,
+    )));
 
     objects
 }
