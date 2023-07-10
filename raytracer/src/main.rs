@@ -50,7 +50,7 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image22.jpg");
+    let path = std::path::Path::new("output/book3/image21.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -110,8 +110,8 @@ fn main() {
             world = final_scene();
             aspect_ratio = 1.;
             width = 800;
-            samples_per_pixel = 50; //10000
-            max_depth = 20; //50
+            samples_per_pixel = 10000;
+            max_depth = 50;
             background = Color::new(0., 0., 0.);
             lookfrom = Point3::new(478., 278., -600.);
             lookat = Point3::new(278., 278., 0.);
