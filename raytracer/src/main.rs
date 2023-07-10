@@ -19,6 +19,7 @@ mod cornell_box;
 mod hittable;
 mod hittable_list;
 mod material;
+mod medium;
 mod perlin;
 mod ray;
 mod scene;
@@ -47,7 +48,7 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image20.jpg");
+    let path = std::path::Path::new("output/book2/image21.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -90,7 +91,10 @@ fn main() {
             lookat = Point3::new(0., 2., 0.);
         }
         _ => {
-            world = cornell_box();
+            world = match 0 {
+                1 => cornell_box(),
+                _ => cornell_smoke(),
+            };
             aspect_ratio = 1.;
             width = 600;
             samples_per_pixel = 200;
