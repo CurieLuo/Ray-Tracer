@@ -85,7 +85,7 @@ impl RotateY {
         let cos_theta = radians.cos();
 
         let mut min = Vec3::new(INFINITY, INFINITY, INFINITY);
-        let mut max = Vec3::new(-INFINITY, -INFINITY, -INFINITY);
+        let mut max = Vec3::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY);
 
         let mut bbox = p.bounding_box(0., 1.);
         //time0 = 0., time1 = 1.

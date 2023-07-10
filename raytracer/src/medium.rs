@@ -21,24 +21,18 @@ impl ConstantMedium {
 impl Hittable for ConstantMedium {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         // Print occasional samples when debugging. To enable, set enableDebugtrue.
-        let rec1 = self.boundary.hit(r, -INFINITY, INFINITY);
-        if rec1.is_none() {
-            return None;
-        }
+        let rec1 = self.boundary.hit(r, NEG_INFINITY, INFINITY);
+        rec1.as_ref()?;
         let mut rec1 = rec1.unwrap();
         let rec2 = self.boundary.hit(r, rec1.t + 0.0001, INFINITY);
-        if rec2.is_none() {
-            return None;
-        }
+        rec2.as_ref()?;
         let mut rec2 = rec2.unwrap();
         rec1.t = rec1.t.max(t_min);
         rec2.t = rec2.t.min(t_max);
-
         rec1.t = rec1.t.max(0.);
         if rec1.t >= rec2.t {
             return None;
         }
-        //? what if rec2.t < 0 ?
 
         let ray_length = r.direction().length();
         let distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
@@ -48,11 +42,9 @@ impl Hittable for ConstantMedium {
             return None;
         }
 
-        rec1.t = rec1.t + hit_distance / ray_length;
+        rec1.t += hit_distance / ray_length;
         rec1.p = r.at(rec1.t);
 
-        rec1.normal = Vec3::new(1., 0., 0.); // arbitrary
-        rec1.front_face = true; // also arbitrary
         rec1.mat_ptr = self.phase_function.clone();
 
         Some(rec1)

@@ -1,6 +1,6 @@
 pub use super::{ray::*, vec3::*};
 pub use std::{
-    f64::{consts::PI, INFINITY},
+    f64::{consts::PI, INFINITY, NEG_INFINITY},
     sync::Arc,
 };
 

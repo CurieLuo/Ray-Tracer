@@ -5,10 +5,7 @@ use std::{fs::File, process::exit};
 
 use camera::*;
 use hittable::*;
-// use hittable_list::*;
-// use material::*;
 use scene::*;
-// use sphere::*;
 use utility::*;
 
 mod aabb;
@@ -102,7 +99,7 @@ fn main() {
             lookfrom = Point3::new(278., 278., -800.);
             lookat = Point3::new(278., 278., 0.);
             vfov = 40.;
-        }
+        } // _ => {}
     }
 
     let height: u32 = (width as f64 / aspect_ratio) as u32;
