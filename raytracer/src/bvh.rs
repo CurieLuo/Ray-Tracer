@@ -1,11 +1,5 @@
 use crate::{aabb::*, hittable::*, hittable_list::*, utility::*};
 
-// random int in [min,max)
-fn randint(min: i32, max: i32) -> i32 {
-    randrange(min as f64, max as f64) as i32
-    // rand::thread_rng().gen_range(min..max)
-}
-
 #[derive(Clone)]
 pub struct BvhNode {
     pub left: Arc<dyn Hittable>,
@@ -45,8 +39,8 @@ impl BvhNode {
             //sort_unstable_by_key
             //TODO partial comparator
             if object_span == 2 {
-                left = objects[0].clone();
-                right = objects[1].clone();
+                left = objects[start].clone();
+                right = objects[start + 1].clone();
             } else {
                 let mid = start + object_span / 2;
                 left = Arc::new(Self::build(objects, start, mid, time0, time1));
@@ -78,7 +72,7 @@ impl Hittable for BvhNode {
             t_max = hit_left.t;
             rec = Some(hit_left);
         }
-        if let Some(hit_right) = self.left.hit(r, t_min, t_max) {
+        if let Some(hit_right) = self.right.hit(r, t_min, t_max) {
             rec = Some(hit_right);
         }
         rec

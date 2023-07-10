@@ -1,7 +1,12 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
-use std::{fs::File, process::exit};
+use indicatif::{MultiProgress, ProgressBar};
+use std::{
+    fs::File,
+    process::exit,
+    sync::mpsc,
+    thread::{self, JoinHandle},
+};
 
 use camera::*;
 use hittable::*;
@@ -45,7 +50,7 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image21.jpg");
+    let path = std::path::Path::new("output/book2/image22.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -53,7 +58,7 @@ fn main() {
     let mut aspect_ratio: f64 = 16. / 9.;
     let mut width: u32 = 400;
     let mut samples_per_pixel: i32 = 100;
-    let max_depth: i32 = 50;
+    let mut max_depth: i32 = 50;
     let time0 = 0.;
     let time1 = 1.;
     let quality: u8 = 100;
@@ -68,6 +73,7 @@ fn main() {
     let world;
     match 0 {
         1 => {
+            max_depth = 20;
             world = random_scene();
             aperture = 0.1;
         }
@@ -82,12 +88,12 @@ fn main() {
         }
         5 => {
             world = simple_light();
-            samples_per_pixel = 400;
+            samples_per_pixel = 10000;
             background = Color::new(0., 0., 0.);
             lookfrom = Point3::new(26., 3., 6.);
             lookat = Point3::new(0., 2., 0.);
         }
-        _ => {
+        6 => {
             world = match 0 {
                 1 => cornell_box(),
                 _ => cornell_smoke(),
@@ -99,7 +105,18 @@ fn main() {
             lookfrom = Point3::new(278., 278., -800.);
             lookat = Point3::new(278., 278., 0.);
             vfov = 40.;
-        } // _ => {}
+        }
+        _ => {
+            world = final_scene();
+            aspect_ratio = 1.;
+            width = 800;
+            samples_per_pixel = 50; //10000
+            max_depth = 20; //50
+            background = Color::new(0., 0., 0.);
+            lookfrom = Point3::new(478., 278., -600.);
+            lookat = Point3::new(278., 278., 0.);
+            vfov = 40.;
+        }
     }
 
     let height: u32 = (width as f64 / aspect_ratio) as u32;
@@ -118,34 +135,64 @@ fn main() {
     );
 
     // Progress Bar
-    let progress = if option_env!("CI").unwrap_or_default() == "true" {
-        ProgressBar::hidden()
-    } else {
-        ProgressBar::new((height * width) as u64)
-    };
+    let multi_progress = MultiProgress::new();
 
     // Render
+    const THREAD_NUM: usize = 14;
+    let mut threads: Vec<JoinHandle<()>> = Vec::new();
+    let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
+    let mut receiver_list = Vec::new();
+    let mut k = 0;
     for j in 0..height {
         for i in 0..width {
-            let pixel = img.get_pixel_mut(i, height - 1 - j);
-            let mut pixel_color = Color::default();
-            for _s in 0..samples_per_pixel {
-                let u = ((i as f64) + random()) / ((width - 1) as f64);
-                let v = ((j as f64) + random()) / ((height - 1) as f64);
-                let ray = cam.get_ray(u, v, time0, time1);
-                pixel_color += ray_color(&ray, background, &world, max_depth);
-            }
-            pixel_color /= samples_per_pixel as f64;
-            for _i in 0..3 {
-                *pixel_color.at(_i) = clamp(pixel_color.get(_i).sqrt(), 0., 0.99);
-            }
-            pixel_color *= 256.;
-            let (r, g, b) = (pixel_color.get(0), pixel_color.get(1), pixel_color.get(2));
-            *pixel = image::Rgb([r as u8, g as u8, b as u8]);
-            progress.inc(1);
+            task_list[k].push((i, j));
+            k = (k + 1) % THREAD_NUM;
         }
     }
-    progress.finish();
+
+    for task in task_list {
+        let (tx, rx) = mpsc::channel();
+        receiver_list.push(rx);
+        let world_ = world.clone();
+        let progress_bar = multi_progress.add(ProgressBar::new(
+            (width * height / THREAD_NUM as u32) as u64,
+        ));
+        let handle = thread::spawn(move || {
+            let mut result = Vec::new();
+            for (i, j) in task {
+                let mut pixel_color = Color::default();
+                for _s in 0..samples_per_pixel {
+                    let u = ((i as f64) + random()) / ((width - 1) as f64);
+                    let v = ((j as f64) + random()) / ((height - 1) as f64);
+                    let ray = cam.get_ray(u, v, time0, time1);
+                    pixel_color += ray_color(&ray, background, &world_, max_depth);
+                }
+                pixel_color /= samples_per_pixel as f64;
+                for _i in 0..3 {
+                    *pixel_color.at(_i) = clamp(pixel_color.get(_i).sqrt(), 0., 0.99);
+                }
+                pixel_color *= 256.;
+                result.push((i, j, pixel_color));
+                progress_bar.inc(1);
+            }
+            tx.send(result).unwrap();
+            progress_bar.finish();
+        });
+        threads.push(handle);
+    }
+    multi_progress.join_and_clear().unwrap();
+
+    for receiver in receiver_list {
+        let result = receiver.recv().unwrap();
+        for (i, j, pixel_color) in result {
+            let (r, g, b) = (pixel_color.x, pixel_color.y, pixel_color.z);
+            let pixel = img.get_pixel_mut(i, height - 1 - j);
+            *pixel = image::Rgb([r as u8, g as u8, b as u8]);
+        }
+    }
+    for thread in threads {
+        thread.join().unwrap();
+    }
 
     println!(
         "Output image as \"{}\"",
