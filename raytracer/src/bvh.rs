@@ -5,7 +5,7 @@ pub struct BvhNode {
     pub left: Arc<dyn Hittable>,
     pub right: Arc<dyn Hittable>,
     pub box_: Aabb,
-}
+} //bounding volume hierachy, similar to a k-D tree
 
 impl BvhNode {
     pub fn new(list: &HittableList, time0: f64, time1: f64) -> Self {
