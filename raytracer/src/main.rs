@@ -55,9 +55,9 @@ fn main() {
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
     // Image
-    let mut aspect_ratio: f64 = 3. / 2.;
-    let mut width: u32 = 1200;
-    let mut samples_per_pixel: i32 = 500;
+    let mut aspect_ratio: f64 = 16. / 9.;
+    let mut width: u32 = 400;
+    let mut samples_per_pixel: i32 = 100;
     let mut max_depth: i32 = 50;
     let time0 = 0.;
     let time1 = 1.;
@@ -71,7 +71,7 @@ fn main() {
     let mut background = Color::new(0.70, 0.80, 1.00);
 
     let world;
-    match 1 {
+    match 0 {
         1 => {
             world = random_scene();
             aperture = 0.1;
@@ -87,7 +87,7 @@ fn main() {
         }
         5 => {
             world = simple_light();
-            samples_per_pixel = 10000;
+            samples_per_pixel = 400;
             background = Color::new(0., 0., 0.);
             lookfrom = Point3::new(26., 3., 6.);
             lookat = Point3::new(0., 2., 0.);
