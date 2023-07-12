@@ -1,4 +1,4 @@
-use crate::{hittable::HitRecord, texture::*, utility::*};
+use crate::{hittable::HitRecord, onb::*, texture::*, utility::*};
 
 pub trait Material: Send + Sync {
     fn scatter(
@@ -42,10 +42,12 @@ impl Material for Lambertian {
         scattered: &mut Ray,
         pdf: &mut f64,
     ) -> bool {
-        let scatter_direction = random_in_hemisphere(rec.normal);
-        *scattered = Ray::new(rec.p, scatter_direction.unit(), r_in.time());
+        let mut uvw = Onb::default();
+        uvw.build_from_w(rec.normal);
+        let direction = uvw.local(random_cosine_direction());
+        *scattered = Ray::new(rec.p, direction.unit(), r_in.time());
         *attenuation = self.albedo.value(rec.u, rec.v, rec.p);
-        *pdf = 0.5 / PI;
+        *pdf = dot(uvw.w, scattered.direction()) / PI;
 
         true
     }

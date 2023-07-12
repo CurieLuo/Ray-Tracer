@@ -82,21 +82,31 @@ pub fn cross(a: Vec3, b: Vec3) -> Vec3 {
 //     r_out_perp + r_out_parallel
 // }
 
-pub fn random_in_unit_sphere() -> Vec3 {
-    loop {
-        let p = Vec3::randrange(-1., 1.);
-        if p.length_squared() < 1. {
-            return p;
-        }
-    }
-}
-pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-    let in_unit_sphere = random_in_unit_sphere();
-    if dot(in_unit_sphere, normal) > 0. {
-        in_unit_sphere
-    } else {
-        -in_unit_sphere
-    }
+// pub fn random_in_unit_sphere() -> Vec3 {
+//     loop {
+//         let p = Vec3::randrange(-1., 1.);
+//         if p.length_squared() < 1. {
+//             return p;
+//         }
+//     }
+// }
+// pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+//     let in_unit_sphere = random_in_unit_sphere();
+//     if dot(in_unit_sphere, normal) > 0. {
+//         in_unit_sphere
+//     } else {
+//         -in_unit_sphere
+//     }
+// }
+
+pub fn random_cosine_direction() -> Vec3 {
+    let r1 = random();
+    let r2 = random();
+    let z = (1. - r2).sqrt();
+    let phi = 2. * std::f64::consts::PI * r1;
+    let x = phi.cos() * r2.sqrt();
+    let y = phi.sin() * r2.sqrt();
+    Vec3::new(x, y, z)
 }
 
 // pub fn random_unit_vector() -> Vec3 {
