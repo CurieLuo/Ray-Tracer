@@ -8,6 +8,7 @@ pub struct HitRecord {
     pub mat_ptr: Arc<dyn Material>,
     pub u: f64,
     pub v: f64,
+    // (u,v) is the relative coordinate on the surface
     pub front_face: bool,
 }
 

@@ -7,7 +7,7 @@ pub trait Material: Send + Sync {
         _rec: &HitRecord,
         _attenuation: &mut Color,
         _scattered: &mut Ray,
-        _pdf: &mut f64,
+        _pdf_val: &mut f64,
     ) -> bool {
         false
     }
@@ -40,24 +40,19 @@ impl Material for Lambertian {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
-        pdf: &mut f64,
+        pdf_val: &mut f64,
     ) -> bool {
-        let mut uvw = Onb::default();
-        uvw.build_from_w(rec.normal);
+        let uvw = Onb::new(rec.normal);
         let direction = uvw.local(random_cosine_direction());
         *scattered = Ray::new(rec.p, direction.unit(), r_in.time());
         *attenuation = self.albedo.value(rec.u, rec.v, rec.p);
-        *pdf = dot(uvw.w, scattered.direction()) / PI;
+        *pdf_val = dot(uvw.w, scattered.direction()) / PI;
 
         true
     }
     fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
         let cosine = dot(rec.normal, scattered.direction());
-        if cosine < 0. {
-            0.
-        } else {
-            cosine / PI
-        }
+        (cosine / PI).max(0.)
     }
 }
 
@@ -81,7 +76,7 @@ impl Material for DiffuseLight {
         _rec: &HitRecord,
         _attenuation: &mut Color,
         _scattered: &mut Ray,
-        _pdf: &mut f64,
+        _pdf_val: &mut f64,
     ) -> bool {
         false
     }

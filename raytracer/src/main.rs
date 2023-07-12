@@ -1,6 +1,7 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::{MultiProgress, ProgressBar};
+use pdf::CosinePdf;
 use std::{
     fs::File,
     process::exit,
@@ -10,6 +11,7 @@ use std::{
 
 use camera::*;
 use hittable::*;
+use pdf::*;
 use scene::*;
 use utility::*;
 
@@ -21,6 +23,7 @@ mod hittable;
 mod hittable_list;
 mod material;
 mod onb;
+mod pdf;
 mod ray;
 mod scene;
 mod texture;
@@ -34,37 +37,42 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
     if let Some(rec) = world.hit(r, 0.001, INFINITY) {
         let mut scattered = Ray::default();
         let mut attenuation = Color::default();
-        let mut pdf = 0.;
-        let mat = rec.mat_ptr.clone();
+        let mut pdf_val = 0.;
         let emitted = rec.mat_ptr.emitted(&rec, rec.u, rec.v, rec.p);
-        if !mat.scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
+        if !rec
+            .mat_ptr
+            .scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf_val)
+        {
             return emitted;
         }
-        let mut to_light = Vec3::new(randrange(213., 343.), 554., randrange(227., 332.)) - rec.p;
-        let distance_squared = to_light.length_squared();
-        to_light = to_light.unit();
-        if dot(to_light, rec.normal) < 0. {
-            return emitted;
-        }
-        let light_area = (343. - 213.) * (332. - 227.);
-        let light_cosine = to_light.y.abs();
-        if light_cosine < 0.000001 {
-            return emitted;
-        }
-        pdf = distance_squared / (light_cosine * light_area);
-        scattered = Ray::new(rec.p, to_light, r.time());
+        // let mut to_light = Vec3::new(randrange(213., 343.), 554., randrange(227., 332.)) - rec.p;
+        // let distance_squared = to_light.length_squared();
+        // to_light = to_light.unit();
+        // if dot(to_light, rec.normal) < 0. {
+        //     return emitted;
+        // }
+        let p = CosinePdf::new(rec.normal);
+        scattered = Ray::new(rec.p, p.generate(), r.time());
+        pdf_val = p.value(scattered.direction());
+        // let light_area = (343. - 213.) * (332. - 227.);
+        // let light_cosine = to_light.y.abs();
+        // if light_cosine < 0.000001 {
+        //     return emitted;
+        // }
+        // pdf_val = distance_squared / (light_cosine * light_area);
+        // scattered = Ray::new(rec.p, to_light, r.time());
         emitted
             + attenuation
                 * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
                 * ray_color(&scattered, background, world, depth - 1)
-                / pdf
+                / pdf_val
     } else {
         background
     }
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image5.jpg");
+    let path = std::path::Path::new("output/book3/image6.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
