@@ -37,22 +37,34 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
         let mut pdf = 0.;
         let mat = rec.mat_ptr.clone();
         let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
-        if mat.scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
-            emitted
-                + attenuation
-                    * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-                    * ray_color(&scattered, background, world, depth - 1)
-                    / pdf
-        } else {
-            emitted
+        if !mat.scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
+            return emitted;
         }
+        let mut to_light = Vec3::new(randrange(213., 343.), 554., randrange(227., 332.)) - rec.p;
+        let distance_squared = to_light.length_squared();
+        to_light = to_light.unit();
+        if dot(to_light, rec.normal) < 0. {
+            return emitted;
+        }
+        let light_area = (343. - 213.) * (332. - 227.);
+        let light_cosine = to_light.y.abs();
+        if light_cosine < 0.000001 {
+            return emitted;
+        }
+        pdf = distance_squared / (light_cosine * light_area);
+        scattered = Ray::new(rec.p, to_light, r.time());
+        emitted
+            + attenuation
+                * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                * ray_color(&scattered, background, world, depth - 1)
+                / pdf
     } else {
         background
     }
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image3.jpg");
+    let path = std::path::Path::new("output/book3/image4.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
