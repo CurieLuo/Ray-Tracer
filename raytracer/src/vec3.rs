@@ -82,31 +82,31 @@ pub fn cross(a: Vec3, b: Vec3) -> Vec3 {
 //     r_out_perp + r_out_parallel
 // }
 
-// pub fn random_in_unit_sphere() -> Vec3 {
-//     loop {
-//         let p = Vec3::randrange(-1., 1.);
-//         if p.length_squared() < 1. {
-//             return p;
-//         }
-//     }
-// }
-// pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-//     let in_unit_sphere = random_in_unit_sphere();
-//     if dot(in_unit_sphere, normal) > 0. {
-//         in_unit_sphere
-//     } else {
-//         -in_unit_sphere
-//     }
-// }
-
-pub fn random_unit_vector() -> Vec3 {
-    let a = randrange(0., 2. * PI);
-    let z = randrange(-1., 1.);
-    let r = (1. - z * z).sqrt();
-    Vec3::new(r * a.cos(), r * a.sin(), z)
-    //method 2: Normal Distribution
-    //method 3: random_in_unit_sphere().unit()
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let p = Vec3::randrange(-1., 1.);
+        if p.length_squared() < 1. {
+            return p;
+        }
+    }
 }
+pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+    let in_unit_sphere = random_in_unit_sphere();
+    if dot(in_unit_sphere, normal) > 0. {
+        in_unit_sphere
+    } else {
+        -in_unit_sphere
+    }
+}
+
+// pub fn random_unit_vector() -> Vec3 {
+//     let a = randrange(0., 2. * PI);
+//     let z = randrange(-1., 1.);
+//     let r = (1. - z * z).sqrt();
+//     Vec3::new(r * a.cos(), r * a.sin(), z)
+//     //method 2: Normal Distribution
+//     //method 3: random_in_unit_sphere().unit()
+// }
 
 pub fn random_in_unit_disk() -> Vec3 {
     loop {

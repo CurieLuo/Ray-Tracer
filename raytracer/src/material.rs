@@ -42,13 +42,10 @@ impl Material for Lambertian {
         scattered: &mut Ray,
         pdf: &mut f64,
     ) -> bool {
-        let mut scatter_direction = rec.normal + random_unit_vector();
-        if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
-        }
+        let scatter_direction = random_in_hemisphere(rec.normal);
         *scattered = Ray::new(rec.p, scatter_direction.unit(), r_in.time());
         *attenuation = self.albedo.value(rec.u, rec.v, rec.p);
-        *pdf = dot(rec.normal, scattered.direction()) / PI;
+        *pdf = 0.5 / PI;
 
         true
     }
