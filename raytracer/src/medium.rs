@@ -76,6 +76,7 @@ impl Material for Isotropic {
         rec: &HitRecord,
         attenuation: &mut Color,
         scattered: &mut Ray,
+        _pdf: &mut f64, //TODO
     ) -> bool {
         *scattered = Ray::new(rec.p, random_in_unit_sphere(), r_in.time());
         *attenuation = self.albedo.value(rec.u, rec.v, rec.p);

@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-use crate::utility::{random, randrange, PI};
+use crate::utility::*;
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;
@@ -72,24 +72,32 @@ pub fn cross(a: Vec3, b: Vec3) -> Vec3 {
     }
 }
 
-pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-    v - 2. * dot(v, n) * n
-}
-pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
-    let cos_theta = (-dot(uv, n)).min(1.);
-    let r_out_perp = etai_over_etat * (uv + cos_theta * n);
-    let r_out_parallel = -((1. - r_out_perp.length_squared()).abs().sqrt()) * n;
-    r_out_perp + r_out_parallel
-}
+// pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+//     v - 2. * dot(v, n) * n
+// }
+// pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
+//     let cos_theta = (-dot(uv, n)).min(1.);
+//     let r_out_perp = etai_over_etat * (uv + cos_theta * n);
+//     let r_out_parallel = -((1. - r_out_perp.length_squared()).abs().sqrt()) * n;
+//     r_out_perp + r_out_parallel
+// }
 
-pub fn random_in_unit_sphere() -> Vec3 {
-    loop {
-        let p = Vec3::randrange(-1., 1.);
-        if p.length_squared() < 1. {
-            return p;
-        }
-    }
-}
+// pub fn random_in_unit_sphere() -> Vec3 {
+//     loop {
+//         let p = Vec3::randrange(-1., 1.);
+//         if p.length_squared() < 1. {
+//             return p;
+//         }
+//     }
+// }
+// pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
+//     let in_unit_sphere = random_in_unit_sphere();
+//     if dot(in_unit_sphere, normal) > 0. {
+//         in_unit_sphere
+//     } else {
+//         -in_unit_sphere
+//     }
+// }
 
 pub fn random_unit_vector() -> Vec3 {
     let a = randrange(0., 2. * PI);
@@ -99,15 +107,6 @@ pub fn random_unit_vector() -> Vec3 {
     //method 2: Normal Distribution
     //method 3: random_in_unit_sphere().unit()
 }
-
-// pub fn random_in_hemisphere(normal: Vec3) -> Vec3 {
-//     let in_unit_sphere = random_in_unit_sphere();
-//     if dot(in_unit_sphere, normal) > 0. {
-//         in_unit_sphere
-//     } else {
-//         -in_unit_sphere
-//     }
-// }
 
 pub fn random_in_unit_disk() -> Vec3 {
     loop {

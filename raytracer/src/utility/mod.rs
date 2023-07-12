@@ -1,5 +1,5 @@
 pub use super::{ray::*, vec3::*};
-use rand::prelude::*;
+// use rand::prelude::*;
 pub use std::{
     f64::{consts::PI, INFINITY, NEG_INFINITY},
     sync::Arc,
@@ -25,8 +25,8 @@ pub fn random() -> f64 {
 pub fn randrange(min: f64, max: f64) -> f64 {
     min + (max - min) * random()
 }
-// random int in [min,max)
-pub fn randint(min: i32, max: i32) -> i32 {
-    // randrange(min as f64, max as f64) as i32
-    rand::thread_rng().gen_range(min..max)
-}
+// // random int in [min,max)
+// pub fn randint(min: i32, max: i32) -> i32 {
+//     // randrange(min as f64, max as f64) as i32
+//     rand::thread_rng().gen_range(min..max)
+// }

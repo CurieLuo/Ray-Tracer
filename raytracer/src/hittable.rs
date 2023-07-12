@@ -54,7 +54,6 @@ impl Hittable for Translate {
         let moved_r = Ray::new(r.origin() - self.offset, r.direction(), r.time());
         if let Some(mut rec) = self.ptr.hit(&moved_r, t_min, t_max) {
             rec.p += self.offset;
-            // rec.set_face_normal(&moved_r, rec.normal);
             return Some(rec);
         }
         None
@@ -130,7 +129,6 @@ impl Hittable for RotateY {
 
         direction.x = self.cos_theta * r.direction().x - self.sin_theta * r.direction().z;
         direction.z = self.sin_theta * r.direction().x + self.cos_theta * r.direction().z;
-
         let rotated_r = Ray::new(origin, direction, r.time());
 
         if let Some(mut rec) = self.ptr.hit(&rotated_r, t_min, t_max) {
@@ -140,8 +138,8 @@ impl Hittable for RotateY {
             p.x = self.cos_theta * rec.p.x + self.sin_theta * rec.p.z;
             p.z = -self.sin_theta * rec.p.x + self.cos_theta * rec.p.z;
 
-            normal.x = self.cos_theta * rec.normal.z + self.sin_theta * rec.normal.z;
-            normal.z = -self.sin_theta * rec.normal.z + self.cos_theta * rec.normal.z;
+            normal.x = self.cos_theta * rec.normal.x + self.sin_theta * rec.normal.z;
+            normal.z = -self.sin_theta * rec.normal.x + self.cos_theta * rec.normal.z;
 
             rec.p = p;
             rec.set_face_normal(&rotated_r, normal);

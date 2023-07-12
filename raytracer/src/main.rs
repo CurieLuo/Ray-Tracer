@@ -15,17 +15,13 @@ use utility::*;
 
 mod aabb;
 mod aarect;
-mod bvh;
 mod camera;
 mod cornell_box;
 mod hittable;
 mod hittable_list;
 mod material;
-mod medium;
-mod perlin;
 mod ray;
 mod scene;
-mod sphere;
 mod texture;
 mod utility;
 mod vec3;
@@ -37,10 +33,15 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
     if let Some(rec) = world.hit(r, 0.001, INFINITY) {
         let mut scattered = Ray::default();
         let mut attenuation = Color::default();
+        let mut pdf = 0.;
         let mat = rec.mat_ptr.clone();
         let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
-        if mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
-            emitted + attenuation * ray_color(&scattered, background, world, depth - 1)
+        if mat.scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
+            emitted
+                + attenuation
+                    * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                    * ray_color(&scattered, background, world, depth - 1)
+                    / pdf
         } else {
             emitted
         }
@@ -50,73 +51,27 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image22.jpg");
+    let path = std::path::Path::new("output/book3/image1.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
     // Image
-    let mut aspect_ratio: f64 = 16. / 9.;
-    let mut width: u32 = 400;
-    let mut samples_per_pixel: i32 = 100;
-    let mut max_depth: i32 = 50;
+    let aspect_ratio: f64 = 1.0;
+    let width: u32 = 600;
+    let samples_per_pixel: i32 = 100;
+    let max_depth: i32 = 50; //TODO
     let time0 = 0.;
     let time1 = 1.;
     let quality: u8 = 100;
 
     // World & Camera
-    let mut lookfrom = Point3::new(13., 2., 3.);
-    let mut lookat = Point3::new(0., 0., 0.);
-    let mut vfov = 20.;
-    let mut aperture = 0.;
-    let mut background = Color::new(0.70, 0.80, 1.00);
+    let lookfrom = Point3::new(278., 278., -800.);
+    let lookat = Point3::new(278., 278., 0.);
+    let vfov = 40.;
+    let aperture = 0.;
 
-    let world;
-    match 0 {
-        1 => {
-            world = random_scene();
-            aperture = 0.1;
-        }
-        2 => {
-            world = two_spheres();
-        }
-        3 => {
-            world = two_perlin_spheres();
-        }
-        4 => {
-            world = earth();
-        }
-        5 => {
-            world = simple_light();
-            samples_per_pixel = 400;
-            background = Color::new(0., 0., 0.);
-            lookfrom = Point3::new(26., 3., 6.);
-            lookat = Point3::new(0., 2., 0.);
-        }
-        6 => {
-            world = match 0 {
-                1 => cornell_box(),
-                _ => cornell_smoke(),
-            };
-            aspect_ratio = 1.;
-            width = 600;
-            samples_per_pixel = 200;
-            background = Color::new(0., 0., 0.);
-            lookfrom = Point3::new(278., 278., -800.);
-            lookat = Point3::new(278., 278., 0.);
-            vfov = 40.;
-        }
-        _ => {
-            world = final_scene();
-            aspect_ratio = 1.;
-            width = 800;
-            samples_per_pixel = 1000;
-            max_depth = 20;
-            background = Color::new(0., 0., 0.);
-            lookfrom = Point3::new(478., 278., -600.);
-            lookat = Point3::new(278., 278., 0.);
-            vfov = 40.;
-        }
-    }
+    let world = cornell_box();
+    let background = Color::new(0., 0., 0.);
 
     let height: u32 = (width as f64 / aspect_ratio) as u32;
     let mut img: RgbImage = ImageBuffer::new(width, height);
