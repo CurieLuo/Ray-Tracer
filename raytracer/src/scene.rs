@@ -1,4 +1,4 @@
-use crate::hittable::{RotateY, Translate};
+use crate::hittable::{FlipFace, RotateY, Translate};
 use crate::{aarect::*, cornell_box::*, hittable_list::*, material::*, utility::*};
 
 pub fn cornell_box() -> HittableList {
@@ -11,7 +11,9 @@ pub fn cornell_box() -> HittableList {
 
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 555., green)));
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 0., red)));
-    objects.add(Arc::new(XZRect::new(213., 343., 227., 332., 554., light)));
+    objects.add(Arc::new(FlipFace::new(Arc::new(XZRect::new(
+        213., 343., 227., 332., 554., light,
+    )))));
     objects.add(Arc::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
     objects.add(Arc::new(XZRect::new(
         0.,

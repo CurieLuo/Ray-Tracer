@@ -36,7 +36,7 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
         let mut attenuation = Color::default();
         let mut pdf = 0.;
         let mat = rec.mat_ptr.clone();
-        let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
+        let emitted = rec.mat_ptr.emitted(&rec, rec.u, rec.v, rec.p);
         if !mat.scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf) {
             return emitted;
         }
@@ -64,7 +64,7 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image4.jpg");
+    let path = std::path::Path::new("output/book3/image5.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
