@@ -53,7 +53,7 @@ fn ray_color(
         }
         let p0 = HittablePdf::new(lights.clone(), rec.p);
         let p1 = CosinePdf::new(rec.normal);
-        let mixed_pdf = MixturePdf::new(Arc::new(p0), Arc::new(p1));
+        let mixed_pdf = MixturePdf::new(Arc::new(p0), Arc::new(p1), 0.5);
         scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
         pdf_val = mixed_pdf.value(scattered.direction());
 
