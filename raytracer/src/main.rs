@@ -25,6 +25,7 @@ mod onb;
 mod pdf;
 mod ray;
 mod scene;
+mod sphere;
 mod texture;
 mod utility;
 mod vec3;
@@ -36,7 +37,6 @@ fn ray_color(
     lights: &Arc<dyn Hittable>,
     depth: i32,
 ) -> Color {
-    //TODO lights:&dyn Hittable (HittableList)
     if depth <= 0 {
         return Color::new(0., 0., 0.);
     }
@@ -69,7 +69,7 @@ fn ray_color(
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image9.jpg");
+    let path = std::path::Path::new("output/book3/image10.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -77,7 +77,7 @@ fn main() {
     let aspect_ratio: f64 = 1.0;
     let width: u32 = 600;
     let samples_per_pixel: i32 = 1000;
-    let max_depth: i32 = 50; // TODO
+    let max_depth: i32 = 50;
     let time0 = 0.;
     let time1 = 1.;
     let quality: u8 = 100;
@@ -111,8 +111,7 @@ fn main() {
 
     // Render
     const THREAD_NUM: usize = 14;
-    const BATCH_SIZE: u32 = 256;
-    // TODO
+    const BATCH_SIZE: u32 = 256; // optimize progress bar
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
     let mut receiver_list = Vec::new();
@@ -142,8 +141,10 @@ fn main() {
                     let v = ((j as f64) + random()) / ((height - 1) as f64);
                     let ray = cam.get_ray(u, v, time0, time1);
                     pixel_color += ray_color(&ray, background, &world_, &lights_, max_depth);
-                    // TODO support HittableList for lights
                 }
+                // for _i in 0..3 {
+                //     assert!(pixel_color.get(_i) == pixel_color.get(_i));
+                // } // note: no NaN found
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {
                     *pixel_color.at(_i) = clamp(pixel_color.get(_i).sqrt(), 0., 0.99);

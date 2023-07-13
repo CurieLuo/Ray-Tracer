@@ -99,6 +99,15 @@ pub fn random_in_unit_sphere() -> Vec3 {
 //     }
 // }
 
+// pub fn random_unit_vector() -> Vec3 {
+//     let a = randrange(0., 2. * PI);
+//     let z = randrange(-1., 1.);
+//     let r = (1. - z * z).sqrt();
+//     Vec3::new(r * a.cos(), r * a.sin(), z)
+//     //method 2: Normal Distribution
+//     //method 3: random_in_unit_sphere().unit()
+// }
+
 pub fn random_cosine_direction() -> Vec3 {
     let r1 = random();
     let r2 = random();
@@ -109,14 +118,15 @@ pub fn random_cosine_direction() -> Vec3 {
     Vec3::new(x, y, z)
 }
 
-// pub fn random_unit_vector() -> Vec3 {
-//     let a = randrange(0., 2. * PI);
-//     let z = randrange(-1., 1.);
-//     let r = (1. - z * z).sqrt();
-//     Vec3::new(r * a.cos(), r * a.sin(), z)
-//     //method 2: Normal Distribution
-//     //method 3: random_in_unit_sphere().unit()
-// }
+pub fn random_to_sphere(radius: f64, distance_squared: f64) -> Vec3 {
+    let r1 = random();
+    let r2 = random();
+    let z = 1. + r2 * ((1. - radius * radius / distance_squared).sqrt() - 1.);
+    let phi = 2. * std::f64::consts::PI * r1;
+    let x = phi.cos() * (1. - z * z).sqrt();
+    let y = phi.sin() * (1. - z * z).sqrt();
+    Vec3::new(x, y, z)
+}
 
 pub fn random_in_unit_disk() -> Vec3 {
     loop {
