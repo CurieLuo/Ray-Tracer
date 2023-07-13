@@ -12,7 +12,7 @@ pub fn cornell_box() -> (HittableList, Arc<dyn Hittable>) {
     let light = Arc::new(DiffuseLight::new_color(Color::new(15., 15., 15.)));
 
     let light1 = Arc::new(XZRect::new(213., 343., 227., 332., 554., light));
-    // lights.add(light1.clone());
+    lights.add(light1.clone());
     objects.add(Arc::new(FlipFace::new(light1)));
 
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 555., green)));

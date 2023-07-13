@@ -69,7 +69,7 @@ fn ray_color(
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image10.jpg");
+    let path = std::path::Path::new("output/book3/image12.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -142,9 +142,9 @@ fn main() {
                     let ray = cam.get_ray(u, v, time0, time1);
                     pixel_color += ray_color(&ray, background, &world_, &lights_, max_depth);
                 }
-                // for _i in 0..3 {
-                //     assert!(pixel_color.get(_i) == pixel_color.get(_i));
-                // } // note: no NaN found
+                for _i in 0..3 {
+                    assert!(pixel_color.get(_i) == pixel_color.get(_i));
+                } // note: no NaN found
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {
                     *pixel_color.at(_i) = clamp(pixel_color.get(_i).sqrt(), 0., 0.99);
