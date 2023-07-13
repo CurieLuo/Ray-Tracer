@@ -2,20 +2,20 @@ use crate::{hittable::HitRecord, pdf::*, texture::*, utility::*};
 
 #[derive(Clone)]
 pub struct ScatterRecord {
-    pub specular_ray: Ray,
+    pub scattered: Ray,
     pub is_specular: bool,
     pub attenuation: Color,
     pub pdf_ptr: Option<Arc<dyn Pdf>>,
 }
 impl ScatterRecord {
     pub fn new(
-        specular_ray: Ray,
+        scattered: Ray,
         is_specular: bool,
         attenuation: Color,
         pdf_ptr: Option<Arc<dyn Pdf>>,
     ) -> Self {
         Self {
-            specular_ray,
+            scattered,
             is_specular,
             attenuation,
             pdf_ptr,
@@ -45,9 +45,9 @@ impl Lambertian {
             albedo: Arc::new(SolidColor::new(a)),
         }
     }
-    // pub fn new_texture(albedo: Arc<dyn Texture>) -> Self {
-    //     Self { albedo }
-    // }
+    pub fn new_texture(albedo: Arc<dyn Texture>) -> Self {
+        Self { albedo }
+    }
 }
 impl Material for Lambertian {
     fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
@@ -95,24 +95,24 @@ pub struct Metal {
     pub albedo: Color,
     pub fuzz: f64,
 }
-// impl Metal {
-//     pub fn new(albedo: Color, f: f64) -> Self {
-//         Metal {
-//             albedo,
-//             fuzz: f.min(1.),
-//         }
-//     }
-// }
+impl Metal {
+    pub fn new(albedo: Color, f: f64) -> Self {
+        Metal {
+            albedo,
+            fuzz: f.min(1.),
+        }
+    }
+}
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let reflected = reflect(r_in.direction().unit(), rec.normal);
-        let specular_ray = Ray::new(
+        let scattered = Ray::new(
             rec.p,
             reflected + self.fuzz * random_in_unit_sphere(),
             r_in.time(),
         );
 
-        Some(ScatterRecord::new(specular_ray, true, self.albedo, None))
+        Some(ScatterRecord::new(scattered, true, self.albedo, None))
     }
 }
 
@@ -147,9 +147,9 @@ impl Material for Dielectric {
             } else {
                 refract(unit_direction, rec.normal, refraction_ratio)
             };
-        let specular_ray = Ray::new(rec.p, direction, r_in.time());
+        let scattered = Ray::new(rec.p, direction, r_in.time());
         Some(ScatterRecord::new(
-            specular_ray,
+            scattered,
             true,
             Color::new(1., 1., 1.),
             None,

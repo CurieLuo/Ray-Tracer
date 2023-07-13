@@ -70,16 +70,11 @@ impl Isotropic {
 }
 
 impl Material for Isotropic {
-    fn scatter(
-        &self,
-        r_in: &Ray,
-        rec: &HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut Ray,
-        _pdf: &mut f64, //TODO
-    ) -> bool {
-        *scattered = Ray::new(rec.p, random_unit_vector(), r_in.time());
-        *attenuation = self.albedo.value(rec.u, rec.v, rec.p);
-        true
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        let scattered = Ray::new(rec.p, random_unit_vector(), r_in.time());
+        let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
+
+        Some(ScatterRecord::new(scattered, false, attenuation, None))
+        // TODO is_specular?
     }
 }

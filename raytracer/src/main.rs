@@ -16,13 +16,16 @@ use utility::*;
 
 mod aabb;
 mod aarect;
+mod bvh;
 mod camera;
 mod cornell_box;
 mod hittable;
 mod hittable_list;
 mod material;
+mod medium;
 mod onb;
 mod pdf;
+mod perlin;
 mod ray;
 mod scene;
 mod sphere;
@@ -46,7 +49,7 @@ fn ray_color(
             // TODO both specular and diffusive
             if let Some(pdf_ptr) = srec.pdf_ptr {
                 let light_ptr = Arc::new(HittablePdf::new(lights.clone(), rec.p));
-                let mixed_pdf: MixturePdf = MixturePdf::new(light_ptr, pdf_ptr, 0.5);
+                let mixed_pdf = MixturePdf::new(light_ptr, pdf_ptr, 0.5);
                 let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
                 let pdf_val = mixed_pdf.value(scattered.direction());
 
@@ -58,7 +61,7 @@ fn ray_color(
             } else {
                 emitted
                     + srec.attenuation
-                        * ray_color(&srec.specular_ray, background, world, lights, depth - 1)
+                        * ray_color(&srec.scattered, background, world, lights, depth - 1)
             }
         } else {
             emitted
@@ -69,27 +72,62 @@ fn ray_color(
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image12.jpg");
+    let path = std::path::Path::new("output/book2/image22.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
     // Image
-    let aspect_ratio: f64 = 1.0;
-    let width: u32 = 600;
-    let samples_per_pixel: i32 = 1000;
-    let max_depth: i32 = 50;
+    let aspect_ratio: f64 = 1.;
+    let width: u32;
+    let samples_per_pixel: i32;
+    let mut max_depth: i32 = 50;
     let time0 = 0.;
     let time1 = 1.;
     let quality: u8 = 100;
 
     // World & Camera
-    let lookfrom = Point3::new(278., 278., -800.);
-    let lookat = Point3::new(278., 278., 0.);
-    let vfov = 40.;
+    let lookfrom;
+    let lookat;
+    let mut vfov = 40.;
     let aperture = 0.;
-
-    let (world, lights) = cornell_box();
     let background = Color::new(0., 0., 0.);
+
+    let world;
+    let lights;
+    match 0 {
+        // 1 => {
+        //     world = random_scene();
+        //     aspect_ratio = 3. / 2.;
+        //     width = 1200;
+        //     samples_per_pixel = 500;
+        //     background = Color::new(0.70, 0.80, 1.00);
+        //     aperture = 0.1;
+        //     vfov = 20.;
+        // }
+        2 => {
+            (world, lights) = cornell_box();
+            width = 600;
+            samples_per_pixel = 20;
+            lookfrom = Point3::new(278., 278., -800.);
+            lookat = Point3::new(278., 278., 0.);
+        }
+        3 => {
+            (world, lights) = simple_light();
+            width = 400;
+            samples_per_pixel = 400;
+            lookfrom = Point3::new(26., 3., 6.);
+            lookat = Point3::new(0., 2., 0.);
+            vfov = 20.;
+        }
+        _ => {
+            (world, lights) = final_scene();
+            width = 800;
+            samples_per_pixel = 1000;
+            max_depth = 50;
+            lookfrom = Point3::new(478., 278., -600.);
+            lookat = Point3::new(278., 278., 0.);
+        }
+    }
 
     let height: u32 = (width as f64 / aspect_ratio) as u32;
     let mut img: RgbImage = ImageBuffer::new(width, height);
@@ -110,7 +148,7 @@ fn main() {
     let multi_progress = MultiProgress::new();
 
     // Render
-    const THREAD_NUM: usize = 14;
+    const THREAD_NUM: usize = 2;
     const BATCH_SIZE: u32 = 256; // optimize progress bar
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
@@ -142,9 +180,6 @@ fn main() {
                     let ray = cam.get_ray(u, v, time0, time1);
                     pixel_color += ray_color(&ray, background, &world_, &lights_, max_depth);
                 }
-                for _i in 0..3 {
-                    assert!(pixel_color.get(_i) == pixel_color.get(_i));
-                } // note: no NaN found
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {
                     *pixel_color.at(_i) = clamp(pixel_color.get(_i).sqrt(), 0., 0.99);

@@ -99,14 +99,14 @@ pub fn random_in_unit_sphere() -> Vec3 {
 //     }
 // }
 
-// pub fn random_unit_vector() -> Vec3 {
-//     let a = randrange(0., 2. * PI);
-//     let z = randrange(-1., 1.);
-//     let r = (1. - z * z).sqrt();
-//     Vec3::new(r * a.cos(), r * a.sin(), z)
-//     //method 2: Normal Distribution
-//     //method 3: random_in_unit_sphere().unit()
-// }
+pub fn random_unit_vector() -> Vec3 {
+    let a = randrange(0., 2. * PI);
+    let z = randrange(-1., 1.);
+    let r = (1. - z * z).sqrt();
+    Vec3::new(r * a.cos(), r * a.sin(), z)
+    //method 2: Normal Distribution
+    //method 3: random_in_unit_sphere().unit()
+}
 
 pub fn random_cosine_direction() -> Vec3 {
     let r1 = random();

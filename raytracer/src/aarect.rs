@@ -51,6 +51,25 @@ impl Hittable for XYRect {
             Point3::new(self.x1, self.y1, self.k + 0.0001),
         ))
     }
+
+    fn pdf_value(&self, origin: Point3, v: Vec3) -> f64 {
+        if let Some(rec) = self.hit(&Ray::new(origin, v, 0.), 0.001, INFINITY) {
+            let area = (self.x1 - self.x0) * (self.y1 - self.y0);
+            let distance_squared = rec.t * rec.t * v.length_squared();
+            let cosine = dot(v, rec.normal).abs() / v.length();
+            distance_squared / (cosine * area)
+        } else {
+            0.
+        }
+    }
+    fn random(&self, origin: Point3) -> Vec3 {
+        let random_point = Point3::new(
+            randrange(self.x0, self.x1),
+            randrange(self.y0, self.y1),
+            self.k,
+        );
+        random_point - origin
+    }
 }
 
 pub struct XZRect {
@@ -175,5 +194,24 @@ impl Hittable for YZRect {
             Point3::new(self.k - 0.0001, self.y0, self.z0),
             Point3::new(self.k + 0.0001, self.y1, self.z1),
         ))
+    }
+
+    fn pdf_value(&self, origin: Point3, v: Vec3) -> f64 {
+        if let Some(rec) = self.hit(&Ray::new(origin, v, 0.), 0.001, INFINITY) {
+            let area = (self.z1 - self.z0) * (self.y1 - self.y0);
+            let distance_squared = rec.t * rec.t * v.length_squared();
+            let cosine = dot(v, rec.normal).abs() / v.length();
+            distance_squared / (cosine * area)
+        } else {
+            0.
+        }
+    }
+    fn random(&self, origin: Point3) -> Vec3 {
+        let random_point = Point3::new(
+            self.k,
+            randrange(self.y0, self.y1),
+            randrange(self.z0, self.z1),
+        );
+        random_point - origin
     }
 }
