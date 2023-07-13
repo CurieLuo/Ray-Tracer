@@ -1,7 +1,6 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::{MultiProgress, ProgressBar};
-use pdf::CosinePdf;
 use std::{
     fs::File,
     process::exit,
@@ -30,7 +29,14 @@ mod texture;
 mod utility;
 mod vec3;
 
-fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Color {
+fn ray_color(
+    r: &Ray,
+    background: Color,
+    world: &dyn Hittable,
+    lights: &Arc<dyn Hittable>,
+    depth: i32,
+) -> Color {
+    //TODO lights:&dyn Hittable (HittableList)
     if depth <= 0 {
         return Color::new(0., 0., 0.);
     }
@@ -45,15 +51,16 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
         {
             return emitted;
         }
+        let light_pdf = HittablePdf::new(lights.clone(), rec.p);
+        scattered = Ray::new(rec.p, light_pdf.generate().unit(), r.time());
+        //? unit?????????
+        pdf_val = light_pdf.value(scattered.direction());
         // let mut to_light = Vec3::new(randrange(213., 343.), 554., randrange(227., 332.)) - rec.p;
         // let distance_squared = to_light.length_squared();
         // to_light = to_light.unit();
         // if dot(to_light, rec.normal) < 0. {
         //     return emitted;
         // }
-        let p = CosinePdf::new(rec.normal);
-        scattered = Ray::new(rec.p, p.generate(), r.time());
-        pdf_val = p.value(scattered.direction());
         // let light_area = (343. - 213.) * (332. - 227.);
         // let light_cosine = to_light.y.abs();
         // if light_cosine < 0.000001 {
@@ -61,10 +68,17 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
         // }
         // pdf_val = distance_squared / (light_cosine * light_area);
         // scattered = Ray::new(rec.p, to_light, r.time());
+
+        /*
+        let p = CosinePdf::new(rec.normal);
+        scattered = Ray::new(rec.p, p.generate(), r.time());
+        pdf_val = p.value(scattered.direction());
+        */
+
         emitted
             + attenuation
                 * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-                * ray_color(&scattered, background, world, depth - 1)
+                * ray_color(&scattered, background, world, lights, depth - 1)
                 / pdf_val
     } else {
         background
@@ -72,7 +86,7 @@ fn ray_color(r: &Ray, background: Color, world: &dyn Hittable, depth: i32) -> Co
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image6.jpg");
+    let path = std::path::Path::new("output/book3/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -91,7 +105,7 @@ fn main() {
     let vfov = 40.;
     let aperture = 0.;
 
-    let world = cornell_box();
+    let (world, lights) = cornell_box();
     let background = Color::new(0., 0., 0.);
 
     let height: u32 = (width as f64 / aspect_ratio) as u32;
@@ -129,6 +143,7 @@ fn main() {
         let (tx, rx) = mpsc::channel();
         receiver_list.push(rx);
         let world_ = world.clone();
+        let lights_ = lights.clone();
         let progress_bar = multi_progress.add(ProgressBar::new(
             (width * height / THREAD_NUM as u32) as u64,
         ));
@@ -140,7 +155,8 @@ fn main() {
                     let u = ((i as f64) + random()) / ((width - 1) as f64);
                     let v = ((j as f64) + random()) / ((height - 1) as f64);
                     let ray = cam.get_ray(u, v, time0, time1);
-                    pixel_color += ray_color(&ray, background, &world_, max_depth);
+                    pixel_color +=
+                        ray_color(&ray, background, &world_, &lights_.objects[0], max_depth);
                 }
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {

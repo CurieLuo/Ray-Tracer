@@ -1,8 +1,9 @@
-use crate::hittable::{FlipFace, RotateY, Translate};
+use crate::hittable::{FlipFace /* , Hittable */, RotateY, Translate};
 use crate::{aarect::*, cornell_box::*, hittable_list::*, material::*, utility::*};
 
-pub fn cornell_box() -> HittableList {
+pub fn cornell_box() -> (HittableList, HittableList) {
     let mut objects = HittableList::new();
+    let mut lights = HittableList::new();
 
     let red = Arc::new(Lambertian::new(Color::new(0.65, 0.05, 0.05)));
     let white = Arc::new(Lambertian::new(Color::new(0.73, 0.73, 0.73)));
@@ -11,9 +12,9 @@ pub fn cornell_box() -> HittableList {
 
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 555., green)));
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 0., red)));
-    objects.add(Arc::new(FlipFace::new(Arc::new(XZRect::new(
-        213., 343., 227., 332., 554., light,
-    )))));
+    let light1 = Arc::new(XZRect::new(213., 343., 227., 332., 554., light));
+    lights.add(light1.clone());
+    objects.add(Arc::new(FlipFace::new(light1)));
     objects.add(Arc::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
     objects.add(Arc::new(XZRect::new(
         0.,
@@ -54,5 +55,5 @@ pub fn cornell_box() -> HittableList {
     ));
     objects.add(box2);
 
-    objects
+    (objects, lights)
 }
