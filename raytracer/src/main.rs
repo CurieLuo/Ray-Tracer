@@ -51,23 +51,11 @@ fn ray_color(
         {
             return emitted;
         }
-        let light_pdf = HittablePdf::new(lights.clone(), rec.p);
-        scattered = Ray::new(rec.p, light_pdf.generate().unit(), r.time());
-        //? unit?????????
-        pdf_val = light_pdf.value(scattered.direction());
-        // let mut to_light = Vec3::new(randrange(213., 343.), 554., randrange(227., 332.)) - rec.p;
-        // let distance_squared = to_light.length_squared();
-        // to_light = to_light.unit();
-        // if dot(to_light, rec.normal) < 0. {
-        //     return emitted;
-        // }
-        // let light_area = (343. - 213.) * (332. - 227.);
-        // let light_cosine = to_light.y.abs();
-        // if light_cosine < 0.000001 {
-        //     return emitted;
-        // }
-        // pdf_val = distance_squared / (light_cosine * light_area);
-        // scattered = Ray::new(rec.p, to_light, r.time());
+        let p0 = HittablePdf::new(lights.clone(), rec.p);
+        let p1 = CosinePdf::new(rec.normal);
+        let mixed_pdf = MixturePdf::new(Arc::new(p0), Arc::new(p1));
+        scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
+        pdf_val = mixed_pdf.value(scattered.direction());
 
         /*
         let p = CosinePdf::new(rec.normal);
@@ -86,15 +74,15 @@ fn ray_color(
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image7.jpg");
+    let path = std::path::Path::new("output/book3/image8.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
     // Image
     let aspect_ratio: f64 = 1.0;
     let width: u32 = 600;
-    let samples_per_pixel: i32 = 100;
-    let max_depth: i32 = 50; //TODO
+    let samples_per_pixel: i32 = 1000;
+    let max_depth: i32 = 50; // TODO
     let time0 = 0.;
     let time1 = 1.;
     let quality: u8 = 100;
@@ -128,6 +116,8 @@ fn main() {
 
     // Render
     const THREAD_NUM: usize = 14;
+    const BATCH_SIZE: u32 = 256;
+    // TODO
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
     let mut receiver_list = Vec::new();
@@ -145,10 +135,11 @@ fn main() {
         let world_ = world.clone();
         let lights_ = lights.clone();
         let progress_bar = multi_progress.add(ProgressBar::new(
-            (width * height / THREAD_NUM as u32) as u64,
+            (width * height / THREAD_NUM as u32 / BATCH_SIZE) as u64,
         ));
         let handle = thread::spawn(move || {
             let mut result = Vec::new();
+            let mut progress_count = 0;
             for (i, j) in task {
                 let mut pixel_color = Color::default();
                 for _s in 0..samples_per_pixel {
@@ -157,6 +148,7 @@ fn main() {
                     let ray = cam.get_ray(u, v, time0, time1);
                     pixel_color +=
                         ray_color(&ray, background, &world_, &lights_.objects[0], max_depth);
+                    // TODO support HittableList for lights
                 }
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {
@@ -164,7 +156,10 @@ fn main() {
                 }
                 pixel_color *= 256.;
                 result.push((i, j, pixel_color));
-                progress_bar.inc(1);
+                progress_count += 1;
+                if progress_count % BATCH_SIZE == 0 {
+                    progress_bar.inc(1);
+                }
             }
             tx.send(result).unwrap();
             progress_bar.finish();

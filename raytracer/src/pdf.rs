@@ -8,15 +8,15 @@ pub trait Pdf {
 pub struct CosinePdf {
     pub uvw: Onb,
 }
-// impl CosinePdf {
-//     pub fn new(w: Vec3) -> Self {
-//         Self { uvw: Onb::new(w) }
-//     }
-// }
+impl CosinePdf {
+    pub fn new(w: Vec3) -> Self {
+        Self { uvw: Onb::new(w) }
+    }
+}
 impl Pdf for CosinePdf {
     fn value(&self, direction: Vec3) -> f64 {
         let cosine = dot(direction.unit(), self.uvw.w);
-        (cosine / PI).max(0.)
+        cosine.max(0.) / PI
     }
     fn generate(&self) -> Vec3 {
         self.uvw.local(random_cosine_direction())
@@ -39,5 +39,32 @@ impl Pdf for HittablePdf {
 
     fn generate(&self) -> Vec3 {
         self.ptr.random(self.o)
+    }
+}
+pub struct MixturePdf {
+    p: [Arc<dyn Pdf>; 2],
+    wt0: f64,
+}
+
+impl MixturePdf {
+    pub fn new(p0: Arc<dyn Pdf>, p1: Arc<dyn Pdf>) -> Self {
+        Self {
+            p: [p0, p1],
+            wt0: 1.,
+        }
+    }
+}
+
+impl Pdf for MixturePdf {
+    fn value(&self, direction: Vec3) -> f64 {
+        self.wt0 * self.p[0].value(direction) + (1. - self.wt0) * self.p[1].value(direction)
+    }
+
+    fn generate(&self) -> Vec3 {
+        if random() < self.wt0 {
+            self.p[0].generate()
+        } else {
+            self.p[1].generate()
+        }
     }
 }

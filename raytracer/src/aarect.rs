@@ -109,7 +109,6 @@ impl Hittable for XZRect {
         if let Some(rec) = self.hit(&Ray::new(origin, v, 0.), 0.001, INFINITY) {
             let area = (self.x1 - self.x0) * (self.z1 - self.z0);
             let distance_squared = rec.t * rec.t * v.length_squared();
-            //????????
             let cosine = dot(v, rec.normal).abs() / v.length();
             distance_squared / (cosine * area)
         } else {

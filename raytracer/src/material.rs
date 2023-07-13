@@ -52,7 +52,7 @@ impl Material for Lambertian {
     }
     fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
         let cosine = dot(rec.normal, scattered.direction());
-        (cosine / PI).max(0.)
+        cosine.max(0.) / PI
     }
 }
 
