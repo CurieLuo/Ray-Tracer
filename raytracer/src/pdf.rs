@@ -24,8 +24,8 @@ impl Pdf for CosinePdf {
 }
 
 pub struct HittablePdf {
-    o: Point3,
-    ptr: Arc<dyn Hittable>,
+    pub o: Point3,
+    pub ptr: Arc<dyn Hittable>,
 }
 impl HittablePdf {
     pub fn new(ptr: Arc<dyn Hittable>, o: Point3) -> Self {
@@ -42,17 +42,15 @@ impl Pdf for HittablePdf {
     }
 }
 pub struct MixturePdf {
-    p0: Arc<dyn Pdf>,
-    p1: Arc<dyn Pdf>,
-    wt0: f64,
+    pub p0: Arc<dyn Pdf>,
+    pub p1: Arc<dyn Pdf>,
+    pub wt0: f64,
 }
-
 impl MixturePdf {
     pub fn new(p0: Arc<dyn Pdf>, p1: Arc<dyn Pdf>, wt0: f64) -> Self {
         Self { p0, p1, wt0 }
     }
 }
-
 impl Pdf for MixturePdf {
     fn value(&self, direction: Vec3) -> f64 {
         self.wt0 * self.p0.value(direction) + (1. - self.wt0) * self.p1.value(direction)

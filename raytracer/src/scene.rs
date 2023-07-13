@@ -1,7 +1,6 @@
-use crate::hittable::{FlipFace /* , Hittable */, RotateY, Translate};
-use crate::{aarect::*, cornell_box::*, hittable_list::*, material::*, utility::*};
+use crate::{aarect::*, cornell_box::*, hittable::*, hittable_list::*, material::*, utility::*};
 
-pub fn cornell_box() -> (HittableList, HittableList) {
+pub fn cornell_box() -> (HittableList, Arc<dyn Hittable>) {
     let mut objects = HittableList::new();
     let mut lights = HittableList::new();
 
@@ -10,11 +9,12 @@ pub fn cornell_box() -> (HittableList, HittableList) {
     let green = Arc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
     let light = Arc::new(DiffuseLight::new_color(Color::new(15., 15., 15.)));
 
-    objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 555., green)));
-    objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 0., red)));
     let light1 = Arc::new(XZRect::new(213., 343., 227., 332., 554., light));
     lights.add(light1.clone());
     objects.add(Arc::new(FlipFace::new(light1)));
+
+    objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 555., green)));
+    objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 0., red)));
     objects.add(Arc::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
     objects.add(Arc::new(XZRect::new(
         0.,
@@ -33,10 +33,11 @@ pub fn cornell_box() -> (HittableList, HittableList) {
         white.clone(),
     )));
 
+    let aluminum = Arc::new(Metal::new(Color::new(0.8, 0.85, 0.88), 0.));
     let box1 = Arc::new(CornellBox::new(
         Point3::new(0., 0., 0.),
         Point3::new(165., 330., 165.),
-        white.clone(),
+        aluminum,
     ));
     let box1 = Arc::new(Translate::new(
         Arc::new(RotateY::new(box1, 15.)),
@@ -55,5 +56,5 @@ pub fn cornell_box() -> (HittableList, HittableList) {
     ));
     objects.add(box2);
 
-    (objects, lights)
+    (objects, Arc::new(lights))
 }

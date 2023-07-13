@@ -41,40 +41,35 @@ fn ray_color(
         return Color::new(0., 0., 0.);
     }
     if let Some(rec) = world.hit(r, 0.001, INFINITY) {
-        let mut scattered = Ray::default();
-        let mut attenuation = Color::default();
-        let mut pdf_val = 0.;
-        let emitted = rec.mat_ptr.emitted(&rec, rec.u, rec.v, rec.p);
-        if !rec
-            .mat_ptr
-            .scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf_val)
-        {
-            return emitted;
+        let emitted: Vec3 = rec.mat_ptr.emitted(&rec, rec.u, rec.v, rec.p);
+        if let Some(srec) = rec.mat_ptr.scatter(r, &rec) {
+            // TODO both specular and diffusive
+            if let Some(pdf_ptr) = srec.pdf_ptr {
+                let light_ptr = Arc::new(HittablePdf::new(lights.clone(), rec.p));
+                let mixed_pdf: MixturePdf = MixturePdf::new(light_ptr, pdf_ptr, 0.5);
+                let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
+                let pdf_val = mixed_pdf.value(scattered.direction());
+
+                emitted
+                    + srec.attenuation
+                        * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                        * ray_color(&scattered, background, world, lights, depth - 1)
+                        / pdf_val
+            } else {
+                emitted
+                    + srec.attenuation
+                        * ray_color(&srec.specular_ray, background, world, lights, depth - 1)
+            }
+        } else {
+            emitted
         }
-        let p0 = HittablePdf::new(lights.clone(), rec.p);
-        let p1 = CosinePdf::new(rec.normal);
-        let mixed_pdf = MixturePdf::new(Arc::new(p0), Arc::new(p1), 0.5);
-        scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
-        pdf_val = mixed_pdf.value(scattered.direction());
-
-        /*
-        let p = CosinePdf::new(rec.normal);
-        scattered = Ray::new(rec.p, p.generate(), r.time());
-        pdf_val = p.value(scattered.direction());
-        */
-
-        emitted
-            + attenuation
-                * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-                * ray_color(&scattered, background, world, lights, depth - 1)
-                / pdf_val
     } else {
         background
     }
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image8.jpg");
+    let path = std::path::Path::new("output/book3/image9.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -146,8 +141,7 @@ fn main() {
                     let u = ((i as f64) + random()) / ((width - 1) as f64);
                     let v = ((j as f64) + random()) / ((height - 1) as f64);
                     let ray = cam.get_ray(u, v, time0, time1);
-                    pixel_color +=
-                        ray_color(&ray, background, &world_, &lights_.objects[0], max_depth);
+                    pixel_color += ray_color(&ray, background, &world_, &lights_, max_depth);
                     // TODO support HittableList for lights
                 }
                 pixel_color /= samples_per_pixel as f64;

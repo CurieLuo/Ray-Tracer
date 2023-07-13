@@ -115,7 +115,6 @@ impl Hittable for XZRect {
             0.
         }
     }
-
     fn random(&self, origin: Point3) -> Vec3 {
         let random_point = Point3::new(
             randrange(self.x0, self.x1),

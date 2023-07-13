@@ -51,4 +51,16 @@ impl Hittable for HittableList {
         }
         Some(output_box)
     }
+    fn pdf_value(&self, o: Point3, v: Vec3) -> f64 {
+        let mut sum = 0.;
+        for object in &self.objects {
+            sum += object.pdf_value(o, v);
+        }
+        sum / self.objects.len() as f64
+    }
+
+    fn random(&self, o: Vec3) -> Vec3 {
+        let int_size = self.objects.len();
+        self.objects[randint(0, int_size as i32) as usize].random(o)
+    }
 }
