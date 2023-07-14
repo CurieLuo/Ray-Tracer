@@ -37,7 +37,7 @@ fn ray_color(
     r: &Ray,
     background: Color,
     world: &dyn Hittable,
-    lights: &Arc<dyn Hittable>,
+    lights: &Option<Arc<dyn Hittable>>,
     depth: i32,
 ) -> Color {
     if depth <= 0 {
@@ -48,16 +48,27 @@ fn ray_color(
         if let Some(srec) = rec.mat_ptr.scatter(r, &rec) {
             // TODO both specular and diffusive
             if let Some(pdf_ptr) = srec.pdf_ptr {
-                let light_ptr = Arc::new(HittablePdf::new(lights.clone(), rec.p));
-                let mixed_pdf = MixturePdf::new(light_ptr, pdf_ptr, 0.5);
-                let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
-                let pdf_val = mixed_pdf.value(scattered.direction());
+                if lights.is_some() {
+                    let light_ptr = Arc::new(HittablePdf::new(lights.clone().unwrap(), rec.p));
+                    let mixed_pdf = MixturePdf::new(light_ptr, pdf_ptr, 0.5);
+                    let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
+                    let pdf_val = mixed_pdf.value(scattered.direction());
 
-                emitted
-                    + srec.attenuation
-                        * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-                        * ray_color(&scattered, background, world, lights, depth - 1)
-                        / pdf_val
+                    emitted
+                        + srec.attenuation
+                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                            * ray_color(&scattered, background, world, lights, depth - 1)
+                            / pdf_val
+                } else {
+                    let scattered = Ray::new(rec.p, pdf_ptr.generate().unit(), r.time());
+                    let pdf_val = pdf_ptr.value(scattered.direction());
+
+                    emitted
+                        + srec.attenuation
+                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                            * ray_color(&scattered, background, world, lights, depth - 1)
+                            / pdf_val
+                }
             } else {
                 emitted
                     + srec.attenuation
@@ -72,12 +83,12 @@ fn ray_color(
 }
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image22.jpg");
+    let path = std::path::Path::new("output/test/test1.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
     // Image
-    let aspect_ratio: f64 = 1.;
+    let mut aspect_ratio: f64 = 1.;
     let width: u32;
     let samples_per_pixel: i32;
     let mut max_depth: i32 = 50;
@@ -88,28 +99,31 @@ fn main() {
     // World & Camera
     let lookfrom;
     let lookat;
-    let mut vfov = 40.;
-    let aperture = 0.;
-    let background = Color::new(0., 0., 0.);
+    let vfov;
+    let mut aperture = 0.;
+    let mut background = Color::new(0., 0., 0.);
 
     let world;
     let lights;
     match 0 {
-        // 1 => {
-        //     world = random_scene();
-        //     aspect_ratio = 3. / 2.;
-        //     width = 1200;
-        //     samples_per_pixel = 500;
-        //     background = Color::new(0.70, 0.80, 1.00);
-        //     aperture = 0.1;
-        //     vfov = 20.;
-        // }
+        1 => {
+            (world, lights) = random_scene();
+            aspect_ratio = 16. / 9.; //3. / 2.
+            width = 400; // 1200
+            samples_per_pixel = 100; // 500
+            lookfrom = Point3::new(13., 2., 3.);
+            lookat = Point3::new(0., 0., 0.);
+            background = Color::new(0.70, 0.80, 1.00);
+            aperture = 0.1;
+            vfov = 20.;
+        }
         2 => {
             (world, lights) = cornell_box();
             width = 600;
             samples_per_pixel = 20;
             lookfrom = Point3::new(278., 278., -800.);
             lookat = Point3::new(278., 278., 0.);
+            vfov = 40.;
         }
         3 => {
             (world, lights) = simple_light();
@@ -126,6 +140,7 @@ fn main() {
             max_depth = 50;
             lookfrom = Point3::new(478., 278., -600.);
             lookat = Point3::new(278., 278., 0.);
+            vfov = 40.;
         }
     }
 
@@ -148,8 +163,8 @@ fn main() {
     let multi_progress = MultiProgress::new();
 
     // Render
-    const THREAD_NUM: usize = 2;
-    const BATCH_SIZE: u32 = 256; // optimize progress bar
+    const THREAD_NUM: usize = 14;
+    const BATCH_SIZE: u32 = 32; // optimize progress bar
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
     let mut receiver_list = Vec::new();

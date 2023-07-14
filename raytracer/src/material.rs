@@ -19,7 +19,7 @@ impl ScatterRecord {
             is_specular,
             attenuation,
             pdf_ptr,
-        } //TODO
+        }
     }
 }
 

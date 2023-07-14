@@ -160,12 +160,4 @@ impl Hittable for MovingSphere {
         );
         Some(surrounding_box(&box0, &box1))
     }
-
-    //TODO pdf_value
-    fn random(&self, o: Point3) -> Vec3 {
-        let direction = self.center(random()) - o; // TODO need time parameter
-        let distance_squared = direction.length_squared();
-        let uvw = Onb::new(direction);
-        uvw.local(random_to_sphere(self.radius, distance_squared))
-    }
 }

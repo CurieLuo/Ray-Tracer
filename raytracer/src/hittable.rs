@@ -43,6 +43,7 @@ pub trait Hittable: Send + Sync {
     fn random(&self, _o: Vec3) -> Vec3 {
         Vec3::new(1., 0., 0.)
     }
+    //pdf_value & random are for light sources
 }
 
 pub struct Translate {

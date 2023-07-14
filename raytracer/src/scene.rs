@@ -3,7 +3,7 @@ use crate::{
     sphere::*, texture::*, utility::*,
 };
 
-pub fn final_scene() -> (HittableList, Arc<dyn Hittable>) {
+pub fn final_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
     let mut boxes1 = HittableList::new();
     let ground = Arc::new(Lambertian::new(Color::new(0.48, 0.83, 0.53)));
     let boxes_per_side = 20;
@@ -110,10 +110,10 @@ pub fn final_scene() -> (HittableList, Arc<dyn Hittable>) {
         Vec3::new(-100., 270., 395.),
     )));
 
-    (objects, light1)
+    (objects, Some(light1))
 }
 
-pub fn cornell_box() -> (HittableList, Arc<dyn Hittable>) {
+pub fn cornell_box() -> (HittableList, Option<Arc<dyn Hittable>>) {
     let mut objects = HittableList::new();
     let mut lights = HittableList::new();
 
@@ -174,10 +174,10 @@ pub fn cornell_box() -> (HittableList, Arc<dyn Hittable>) {
     // ));
     // objects.add(box2);
 
-    (objects, Arc::new(lights))
+    (objects, Some(Arc::new(lights)))
 }
 
-pub fn simple_light() -> (HittableList, Arc<dyn Hittable>) {
+pub fn simple_light() -> (HittableList, Option<Arc<dyn Hittable>>) {
     let mut objects = HittableList::new();
     let mut lights = HittableList::new();
 
@@ -202,5 +202,86 @@ pub fn simple_light() -> (HittableList, Arc<dyn Hittable>) {
     lights.add(light2.clone());
     objects.add(light2);
 
-    (objects, Arc::new(lights))
+    (objects, Some(Arc::new(lights)))
+}
+
+pub fn random_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
+    let time0 = 0.;
+    let time1 = 1.;
+    let mut world = HittableList::new();
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = random();
+            let center = Point3::new(
+                (a as f64) + 0.9 * random(),
+                0.2,
+                (b as f64) + 0.9 * random(),
+            );
+            if (center - Point3::new(4., 0.2, 0.)).length() > 0.9 {
+                let sphere_material: Arc<dyn Material>;
+                if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = Color::random() * Color::random();
+                    sphere_material = Arc::new(Lambertian::new(albedo));
+                    let center2 = center + Vec3::new(0., randrange(0., 0.5), 0.);
+                    world.add(Arc::new(MovingSphere::new(
+                        center,
+                        center2,
+                        time0,
+                        time1,
+                        0.2,
+                        sphere_material,
+                    )));
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = Color::randrange(0.5, 1.);
+                    let fuzz = randrange(0., 0.5);
+                    sphere_material = Arc::new(Metal::new(albedo, fuzz));
+                    world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                } else {
+                    // glass
+                    sphere_material = Arc::new(Dielectric::new(1.5));
+                    world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                }
+            }
+        }
+    }
+
+    let material1 = Arc::new(Dielectric::new(1.5));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0., 1., 0.),
+        1.,
+        material1,
+    )));
+
+    let material2 = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(-4., 1., 0.),
+        1.,
+        material2,
+    )));
+
+    let material3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(4., 1., 0.),
+        1.,
+        material3,
+    )));
+
+    let mut world_with_ground = HittableList::new();
+    world_with_ground.add(Arc::new(BvhNode::new(&world, time0, time1)));
+
+    //// let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
+    let checker = Arc::new(CheckerTexture::new_color(
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+    world_with_ground.add(Arc::new(Sphere::new(
+        Point3::new(0., -1000., 0.),
+        1000.,
+        Arc::new(Lambertian::new_texture(checker)),
+    )));
+
+    (world_with_ground, None)
 }
