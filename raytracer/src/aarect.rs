@@ -1,7 +1,8 @@
 use crate::{aabb::*, hittable::*, material::*, utility::*};
 
-pub struct XYRect {
-    mp: Arc<dyn Material>,
+#[derive(Clone)]
+pub struct XYRect<M: Material> {
+    mp: M,
     x0: f64,
     x1: f64,
     y0: f64,
@@ -9,8 +10,8 @@ pub struct XYRect {
     k: f64,
 }
 
-impl XYRect {
-    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mp: Arc<dyn Material>) -> Self {
+impl<M: Material> XYRect<M> {
+    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mp: M) -> Self {
         Self {
             mp,
             x0,
@@ -22,7 +23,7 @@ impl XYRect {
     }
 }
 
-impl Hittable for XYRect {
+impl<M: Material> Hittable for XYRect<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = (self.k - r.origin().z) / r.direction().z;
         if t < t_min || t > t_max {
@@ -38,8 +39,7 @@ impl Hittable for XYRect {
         let u = (x - self.x0) / (self.x1 - self.x0);
         let v = (y - self.y0) / (self.y1 - self.y0);
         let p = r.at(t);
-        let mat_ptr = self.mp.clone();
-        let mut rec = HitRecord::new(t, p, mat_ptr, u, v);
+        let mut rec = HitRecord::new(t, p, &self.mp, u, v);
         rec.set_face_normal(r, Vec3::new(0., 0., 1.));
 
         Some(rec)
@@ -72,8 +72,9 @@ impl Hittable for XYRect {
     }
 }
 
-pub struct XZRect {
-    mp: Arc<dyn Material>,
+#[derive(Clone)]
+pub struct XZRect<M: Material> {
+    mp: M,
     x0: f64,
     x1: f64,
     z0: f64,
@@ -81,8 +82,8 @@ pub struct XZRect {
     k: f64,
 }
 
-impl XZRect {
-    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mp: Arc<dyn Material>) -> Self {
+impl<M: Material> XZRect<M> {
+    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mp: M) -> Self {
         Self {
             mp,
             x0,
@@ -94,7 +95,7 @@ impl XZRect {
     }
 }
 
-impl Hittable for XZRect {
+impl<M: Material> Hittable for XZRect<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = (self.k - r.origin().y) / r.direction().y;
         if t < t_min || t > t_max {
@@ -110,8 +111,7 @@ impl Hittable for XZRect {
         let u = (x - self.x0) / (self.x1 - self.x0);
         let v = (z - self.z0) / (self.z1 - self.z0);
         let p = r.at(t);
-        let mat_ptr = self.mp.clone();
-        let mut rec = HitRecord::new(t, p, mat_ptr, u, v);
+        let mut rec = HitRecord::new(t, p, &self.mp, u, v);
         rec.set_face_normal(r, Vec3::new(0., 1., 0.));
 
         Some(rec)
@@ -144,8 +144,9 @@ impl Hittable for XZRect {
     }
 }
 
-pub struct YZRect {
-    mp: Arc<dyn Material>,
+#[derive(Clone)]
+pub struct YZRect<M: Material> {
+    mp: M,
     y0: f64,
     y1: f64,
     z0: f64,
@@ -153,8 +154,8 @@ pub struct YZRect {
     k: f64,
 }
 
-impl YZRect {
-    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mp: Arc<dyn Material>) -> Self {
+impl<M: Material> YZRect<M> {
+    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mp: M) -> Self {
         Self {
             mp,
             y0,
@@ -166,7 +167,7 @@ impl YZRect {
     }
 }
 
-impl Hittable for YZRect {
+impl<M: Material> Hittable for YZRect<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = (self.k - r.origin().x) / r.direction().x;
         if t < t_min || t > t_max {
@@ -182,8 +183,7 @@ impl Hittable for YZRect {
         let u = (y - self.y0) / (self.y1 - self.y0);
         let v = (z - self.z0) / (self.z1 - self.z0);
         let p = r.at(t);
-        let mat_ptr = self.mp.clone();
-        let mut rec = HitRecord::new(t, p, mat_ptr, u, v);
+        let mut rec = HitRecord::new(t, p, &self.mp, u, v);
         rec.set_face_normal(r, Vec3::new(1., 0., 0.));
 
         Some(rec)

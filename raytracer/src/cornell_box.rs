@@ -7,7 +7,7 @@ pub struct CornellBox {
 }
 
 impl CornellBox {
-    pub fn new(p0: Point3, p1: Point3, ptr: Arc<dyn Material>) -> Self {
+    pub fn new<M: Material + Clone + 'static>(p0: Point3, p1: Point3, ptr: M) -> Self {
         let mut sides = HittableList::new();
 
         sides.add(Arc::new(XYRect::new(

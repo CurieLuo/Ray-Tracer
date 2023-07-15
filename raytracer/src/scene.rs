@@ -3,9 +3,9 @@ use crate::{
     sphere::*, texture::*, utility::*,
 };
 
-pub fn final_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
+pub fn final_scene() -> (HittableList, HittableList) {
     let mut boxes1 = HittableList::new();
-    let ground = Arc::new(Lambertian::new(Color::new(0.48, 0.83, 0.53)));
+    let ground = Lambertian::new(Color::new(0.48, 0.83, 0.53));
     let boxes_per_side = 20;
 
     for i in 0..boxes_per_side {
@@ -28,13 +28,15 @@ pub fn final_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
     let mut objects = HittableList::new();
     objects.add(Arc::new(BvhNode::new(&boxes1, 0., 1.)));
 
-    let light = Arc::new(DiffuseLight::new_color(Color::new(7., 7., 7.)));
-    let light1 = Arc::new(XZRect::new(123., 423., 147., 412., 554., light));
+    let light = DiffuseLight::new_color(Color::new(7., 7., 7.));
+    let light1 = XZRect::new(123., 423., 147., 412., 554., light);
     objects.add(Arc::new(FlipFace::new(light1.clone())));
+    let mut lights = HittableList::new();
+    lights.add(Arc::new(light1));
 
     let center1 = Point3::new(400., 400., 200.);
     let center2 = center1 + Vec3::new(30., 0., 0.);
-    let moving_sphere_material = Arc::new(Lambertian::new(Color::new(0.7, 0.3, 0.1)));
+    let moving_sphere_material = Lambertian::new(Color::new(0.7, 0.3, 0.1));
     objects.add(Arc::new(MovingSphere::new(
         center1,
         center2,
@@ -42,59 +44,49 @@ pub fn final_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
         1.,
         50.,
         moving_sphere_material,
-    ))); //TODO moving_sphere pdf related methods
+    )));
 
     objects.add(Arc::new(Sphere::new(
         Point3::new(260., 150., 45.),
         50.,
-        Arc::new(Dielectric::new(1.5)),
+        Dielectric::new(1.5),
     )));
     objects.add(Arc::new(Sphere::new(
         Point3::new(0., 150., 145.),
         50.,
-        Arc::new(Metal::new(Color::new(0.8, 0.8, 0.9), 1.)),
+        Metal::new(Color::new(0.8, 0.8, 0.9), 1.),
     )));
 
-    let boundary = Arc::new(Sphere::new(
-        Point3::new(360., 150., 145.),
-        70.,
-        Arc::new(Dielectric::new(1.5)),
-    ));
-    objects.add(boundary.clone());
+    let boundary = Sphere::new(Point3::new(360., 150., 145.), 70., Dielectric::new(1.5));
+    objects.add(Arc::new(boundary.clone()));
     objects.add(Arc::new(ConstantMedium::new_color(
         boundary,
         0.2,
         Color::new(0.2, 0.4, 0.9),
     )));
 
-    let boundary = Arc::new(Sphere::new(
-        Point3::new(0., 0., 0.),
-        5000.,
-        Arc::new(Dielectric::new(1.5)),
-    ));
+    let boundary = Sphere::new(Point3::new(0., 0., 0.), 5000., Dielectric::new(1.5));
     objects.add(Arc::new(ConstantMedium::new_color(
         boundary,
         0.0001,
         Color::new(1., 1., 1.),
     )));
 
-    let emat = Arc::new(Lambertian::new_texture(Arc::new(ImageTexture::new(
-        "earthmap.jpg",
-    ))));
+    let emat = Lambertian::new_texture(ImageTexture::new("earthmap.jpg"));
     objects.add(Arc::new(Sphere::new(
         Point3::new(400., 200., 400.),
         100.,
         emat,
     )));
 
-    let pertext = Arc::new(NoiseTexture::new(0.1));
+    let pertext = NoiseTexture::new(0.1);
     objects.add(Arc::new(Sphere::new(
         Point3::new(220., 280., 300.),
         80.,
-        Arc::new(Lambertian::new_texture(pertext)),
+        Lambertian::new_texture(pertext),
     )));
     let mut boxes2 = HittableList::new();
-    let white = Arc::new(Lambertian::new(Color::new(0.73, 0.73, 0.73)));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
     let ns = 1000;
 
     for _ in 0..ns {
@@ -106,24 +98,24 @@ pub fn final_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
     }
 
     objects.add(Arc::new(Translate::new(
-        Arc::new(RotateY::new(Arc::new(BvhNode::new(&boxes2, 0., 1.)), 15.)),
+        RotateY::new(BvhNode::new(&boxes2, 0., 1.), 15.),
         Vec3::new(-100., 270., 395.),
     )));
 
-    (objects, Some(light1))
+    (objects, lights)
 }
 
-pub fn cornell_box() -> (HittableList, Option<Arc<dyn Hittable>>) {
+pub fn cornell_box() -> (HittableList, HittableList) {
     let mut objects = HittableList::new();
     let mut lights = HittableList::new();
 
-    let red = Arc::new(Lambertian::new(Color::new(0.65, 0.05, 0.05)));
-    let white = Arc::new(Lambertian::new(Color::new(0.73, 0.73, 0.73)));
-    let green = Arc::new(Lambertian::new(Color::new(0.12, 0.45, 0.15)));
-    let light = Arc::new(DiffuseLight::new_color(Color::new(15., 15., 15.)));
+    let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
+    let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
+    let green = Lambertian::new(Color::new(0.12, 0.45, 0.15));
+    let light = DiffuseLight::new_color(Color::new(15., 15., 15.));
 
-    let light1 = Arc::new(XZRect::new(213., 343., 227., 332., 554., light));
-    lights.add(light1.clone());
+    let light1 = XZRect::new(213., 343., 227., 332., 554., light);
+    lights.add(Arc::new(light1.clone()));
     objects.add(Arc::new(FlipFace::new(light1)));
 
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 555., green)));
@@ -146,55 +138,55 @@ pub fn cornell_box() -> (HittableList, Option<Arc<dyn Hittable>>) {
         white.clone(),
     )));
 
-    // let aluminum = Arc::new(Metal::new(Color::new(0.8, 0.85, 0.88), 0.));
-    let box1 = Arc::new(CornellBox::new(
+    // let aluminum = Metal::new(Color::new(0.8, 0.85, 0.88), 0.));
+    let box1 = CornellBox::new(
         Point3::new(0., 0., 0.),
         Point3::new(165., 330., 165.),
         white,
-    ));
+    );
     let box1 = Arc::new(Translate::new(
-        Arc::new(RotateY::new(box1, 15.)),
+        RotateY::new(box1, 15.),
         Vec3::new(265., 0., 295.),
     ));
     objects.add(box1);
 
-    let glass = Arc::new(Dielectric::new(1.5));
+    let glass = Dielectric::new(1.5);
     let ball1 = Arc::new(Sphere::new(Point3::new(190., 90., 90.), 90., glass));
     lights.add(ball1.clone());
     objects.add(ball1);
 
-    // let box2 = Arc::new(CornellBox::new(
+    // let box2 = CornellBox::new(
     //     Point3::new(0., 0., 0.),
     //     Point3::new(165., 165., 165.),
     //     white,
-    // ));
+    // );
     // let box2 = Arc::new(Translate::new(
-    //     Arc::new(RotateY::new(box2, -18.)),
+    //     RotateY::new(box2, -18.),
     //     Vec3::new(130., 0., 65.),
     // ));
     // objects.add(box2);
 
-    (objects, Some(Arc::new(lights)))
+    (objects, lights)
 }
 
-pub fn simple_light() -> (HittableList, Option<Arc<dyn Hittable>>) {
+pub fn simple_light() -> (HittableList, HittableList) {
     let mut objects = HittableList::new();
     let mut lights = HittableList::new();
 
-    let pertext = Arc::new(NoiseTexture::new(4.));
+    let pertext = NoiseTexture::new(4.);
     objects.add(Arc::new(Sphere::new(
         Point3::new(0., -1000., 0.),
         1000.,
-        Arc::new(Lambertian::new_texture(pertext.clone())),
+        Lambertian::new_texture(pertext.clone()),
     )));
 
     objects.add(Arc::new(Sphere::new(
         Point3::new(0., 2., 0.),
         2.,
-        Arc::new(Lambertian::new_texture(pertext)),
+        Lambertian::new_texture(pertext),
     )));
 
-    let difflight = Arc::new(DiffuseLight::new_color(Color::new(4., 4., 4.)));
+    let difflight = DiffuseLight::new_color(Color::new(4., 4., 4.));
     let light1 = Arc::new(Sphere::new(Point3::new(0., 7., 0.), 2., difflight.clone()));
     lights.add(light1.clone());
     objects.add(light1);
@@ -202,10 +194,10 @@ pub fn simple_light() -> (HittableList, Option<Arc<dyn Hittable>>) {
     lights.add(light2.clone());
     objects.add(light2);
 
-    (objects, Some(Arc::new(lights)))
+    (objects, lights)
 }
 
-pub fn random_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
+pub fn random_scene() -> (HittableList, HittableList) {
     let time0 = 0.;
     let time1 = 1.;
     let mut world = HittableList::new();
@@ -219,11 +211,10 @@ pub fn random_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
                 (b as f64) + 0.9 * random(),
             );
             if (center - Point3::new(4., 0.2, 0.)).length() > 0.9 {
-                let sphere_material: Arc<dyn Material>;
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Color::random() * Color::random();
-                    sphere_material = Arc::new(Lambertian::new(albedo));
+                    let sphere_material = Lambertian::new(albedo);
                     let center2 = center + Vec3::new(0., randrange(0., 0.5), 0.);
                     world.add(Arc::new(MovingSphere::new(
                         center,
@@ -237,32 +228,32 @@ pub fn random_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
                     // metal
                     let albedo = Color::randrange(0.5, 1.);
                     let fuzz = randrange(0., 0.5);
-                    sphere_material = Arc::new(Metal::new(albedo, fuzz));
+                    let sphere_material = Metal::new(albedo, fuzz);
                     world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 } else {
                     // glass
-                    sphere_material = Arc::new(Dielectric::new(1.5));
+                    let sphere_material = Dielectric::new(1.5);
                     world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 }
             }
         }
     }
 
-    let material1 = Arc::new(Dielectric::new(1.5));
+    let material1 = Dielectric::new(1.5);
     world.add(Arc::new(Sphere::new(
         Point3::new(0., 1., 0.),
         1.,
         material1,
     )));
 
-    let material2 = Arc::new(Lambertian::new(Color::new(0.4, 0.2, 0.1)));
+    let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
     world.add(Arc::new(Sphere::new(
         Point3::new(-4., 1., 0.),
         1.,
         material2,
     )));
 
-    let material3 = Arc::new(Metal::new(Color::new(0.7, 0.6, 0.5), 0.));
+    let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.);
     world.add(Arc::new(Sphere::new(
         Point3::new(4., 1., 0.),
         1.,
@@ -272,16 +263,13 @@ pub fn random_scene() -> (HittableList, Option<Arc<dyn Hittable>>) {
     let mut world_with_ground = HittableList::new();
     world_with_ground.add(Arc::new(BvhNode::new(&world, time0, time1)));
 
-    //// let ground_material = Arc::new(Lambertian::new(Color::new(0.5, 0.5, 0.5)));
-    let checker = Arc::new(CheckerTexture::new_color(
-        Color::new(0.2, 0.3, 0.1),
-        Color::new(0.9, 0.9, 0.9),
-    ));
+    //// let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let checker = CheckerTexture::new_color(Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9));
     world_with_ground.add(Arc::new(Sphere::new(
         Point3::new(0., -1000., 0.),
         1000.,
-        Arc::new(Lambertian::new_texture(checker)),
+        Lambertian::new_texture(checker),
     )));
 
-    (world_with_ground, None)
+    (world_with_ground, HittableList::new())
 }

@@ -5,6 +5,7 @@ pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Color;
 }
 
+#[derive(Clone)]
 pub struct SolidColor {
     color_value: Color,
 }
@@ -19,19 +20,22 @@ impl Texture for SolidColor {
     }
 }
 
-pub struct CheckerTexture {
-    pub even: Arc<dyn Texture>,
-    pub odd: Arc<dyn Texture>,
+#[derive(Clone)]
+pub struct CheckerTexture<T0: Texture, T1: Texture> {
+    pub even: T0,
+    pub odd: T1,
 }
-impl CheckerTexture {
-    pub fn new(even: Arc<dyn Texture>, odd: Arc<dyn Texture>) -> Self {
+impl<T0: Texture, T1: Texture> CheckerTexture<T0, T1> {
+    pub fn new(even: T0, odd: T1) -> Self {
         Self { even, odd }
     }
+}
+impl CheckerTexture<SolidColor, SolidColor> {
     pub fn new_color(c0: Color, c1: Color) -> Self {
-        Self::new(Arc::new(SolidColor::new(c0)), Arc::new(SolidColor::new(c1)))
+        Self::new(SolidColor::new(c0), SolidColor::new(c1))
     }
 }
-impl Texture for CheckerTexture {
+impl<T0: Texture, T1: Texture> Texture for CheckerTexture<T0, T1> {
     fn value(&self, u: f64, v: f64, p: Point3) -> Color {
         let sines = (10. * p.x).sin() * (10. * p.y).sin() * (10. * p.z).sin();
         if sines < 0. {
@@ -42,6 +46,7 @@ impl Texture for CheckerTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct NoiseTexture {
     pub noise: Perlin,
     pub scale: f64,

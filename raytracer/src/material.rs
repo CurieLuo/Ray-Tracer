@@ -36,20 +36,22 @@ pub trait Material: Send + Sync {
 }
 
 #[derive(Clone)]
-pub struct Lambertian {
-    pub albedo: Arc<dyn Texture>,
+pub struct Lambertian<T: Texture> {
+    pub albedo: T,
 }
-impl Lambertian {
-    pub fn new(a: Color) -> Self {
-        Self {
-            albedo: Arc::new(SolidColor::new(a)),
-        }
-    }
-    pub fn new_texture(albedo: Arc<dyn Texture>) -> Self {
+impl<T: Texture> Lambertian<T> {
+    pub fn new_texture(albedo: T) -> Self {
         Self { albedo }
     }
 }
-impl Material for Lambertian {
+impl Lambertian<SolidColor> {
+    pub fn new(a: Color) -> Self {
+        Self {
+            albedo: SolidColor::new(a),
+        }
+    }
+}
+impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
         let pdf_ptr = Arc::new(CosinePdf::new(rec.normal));
@@ -67,20 +69,23 @@ impl Material for Lambertian {
     }
 }
 
-pub struct DiffuseLight {
-    pub emit: Arc<dyn Texture>,
+#[derive(Clone)]
+pub struct DiffuseLight<T: Texture> {
+    pub emit: T,
 }
 
-impl DiffuseLight {
-    pub fn new(emit: Arc<dyn Texture>) -> Self {
+impl<T: Texture> DiffuseLight<T> {
+    pub fn new(emit: T) -> Self {
         Self { emit }
     }
+}
+impl DiffuseLight<SolidColor> {
     pub fn new_color(c: Color) -> Self {
-        Self::new(Arc::new(SolidColor::new(c)))
+        Self::new(SolidColor::new(c))
     }
 }
 
-impl Material for DiffuseLight {
+impl<T: Texture> Material for DiffuseLight<T> {
     fn emitted(&self, rec: &HitRecord, u: f64, v: f64, p: Point3) -> Color {
         if rec.front_face {
             self.emit.value(u, v, p)

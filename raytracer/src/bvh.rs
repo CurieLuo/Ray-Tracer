@@ -29,7 +29,7 @@ impl BvhNode {
         let axis = randint(0, 3);
         let object_span = end - start;
         if object_span == 1 {
-            left = objects[0].clone();
+            left = objects[start].clone();
             right = left.clone();
         } else {
             //? unwrap might cause error

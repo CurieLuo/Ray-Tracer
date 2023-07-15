@@ -10,6 +10,7 @@ use std::{
 
 use camera::*;
 use hittable::*;
+use hittable_list::*;
 use pdf::*;
 use scene::*;
 use utility::*;
@@ -36,8 +37,8 @@ mod vec3;
 fn ray_color(
     r: &Ray,
     background: Color,
-    world: &dyn Hittable,
-    lights: &Option<Arc<dyn Hittable>>,
+    world: &HittableList,
+    lights: &HittableList,
     depth: i32,
 ) -> Color {
     if depth <= 0 {
@@ -48,11 +49,9 @@ fn ray_color(
         if let Some(srec) = rec.mat_ptr.scatter(r, &rec) {
             // TODO both specular and diffusive
             if let Some(pdf_ptr) = srec.pdf_ptr {
-                if lights.is_some() {
-                    let light_ptr = Arc::new(HittablePdf::new(lights.clone().unwrap(), rec.p));
-                    let mixed_pdf = MixturePdf::new(light_ptr, pdf_ptr, 0.5);
-                    let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
-                    let pdf_val = mixed_pdf.value(scattered.direction());
+                if lights.is_empty() {
+                    let scattered = Ray::new(rec.p, pdf_ptr.generate().unit(), r.time());
+                    let pdf_val = pdf_ptr.value(scattered.direction());
 
                     emitted
                         + srec.attenuation
@@ -60,8 +59,10 @@ fn ray_color(
                             * ray_color(&scattered, background, world, lights, depth - 1)
                             / pdf_val
                 } else {
-                    let scattered = Ray::new(rec.p, pdf_ptr.generate().unit(), r.time());
-                    let pdf_val = pdf_ptr.value(scattered.direction());
+                    let light_ptr = HittablePdf::new(lights, rec.p);
+                    let mixed_pdf = MixturePdf::new(&light_ptr, pdf_ptr.as_ref(), 0.5);
+                    let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
+                    let pdf_val = mixed_pdf.value(scattered.direction());
 
                     emitted
                         + srec.attenuation
@@ -120,7 +121,7 @@ fn main() {
         2 => {
             (world, lights) = cornell_box();
             width = 600;
-            samples_per_pixel = 20;
+            samples_per_pixel = 200;
             lookfrom = Point3::new(278., 278., -800.);
             lookat = Point3::new(278., 278., 0.);
             vfov = 40.;
@@ -136,7 +137,7 @@ fn main() {
         _ => {
             (world, lights) = final_scene();
             width = 800;
-            samples_per_pixel = 1000;
+            samples_per_pixel = 100;
             max_depth = 50;
             lookfrom = Point3::new(478., 278., -600.);
             lookat = Point3::new(278., 278., 0.);

@@ -1,19 +1,19 @@
 use crate::{aabb::*, material::Material, utility::*};
 
 #[derive(Clone)]
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub t: f64,
     pub p: Point3,
     pub normal: Vec3,
-    pub mat_ptr: Arc<dyn Material>,
+    pub mat_ptr: &'a dyn Material,
     pub u: f64,
     pub v: f64,
     // (u,v) is the relative coordinate on the surface
     pub front_face: bool,
 }
 
-impl HitRecord {
-    pub fn new(t: f64, p: Point3, mat_ptr: Arc<dyn Material>, u: f64, v: f64) -> Self {
+impl<'a> HitRecord<'a> {
+    pub fn new(t: f64, p: Point3, mat_ptr: &'a dyn Material, u: f64, v: f64) -> Self {
         Self {
             t,
             p,
@@ -46,18 +46,19 @@ pub trait Hittable: Send + Sync {
     //pdf_value & random are for light sources
 }
 
-pub struct Translate {
-    pub ptr: Arc<dyn Hittable>,
+#[derive(Clone)]
+pub struct Translate<H: Hittable> {
+    pub ptr: H,
     pub offset: Vec3,
 }
 
-impl Translate {
-    pub fn new(ptr: Arc<dyn Hittable>, offset: Vec3) -> Self {
+impl<H: Hittable> Translate<H> {
+    pub fn new(ptr: H, offset: Vec3) -> Self {
         Self { ptr, offset }
     }
 }
 
-impl Hittable for Translate {
+impl<H: Hittable> Hittable for Translate<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let moved_r = Ray::new(r.origin() - self.offset, r.direction(), r.time());
         if let Some(mut rec) = self.ptr.hit(&moved_r, t_min, t_max) {
@@ -78,15 +79,16 @@ impl Hittable for Translate {
     }
 }
 
-pub struct RotateY {
-    pub ptr: Arc<dyn Hittable>,
+#[derive(Clone)]
+pub struct RotateY<H: Hittable> {
+    pub ptr: H,
     pub sin_theta: f64,
     pub cos_theta: f64,
     pub bbox: Option<Aabb>,
 }
 
-impl RotateY {
-    pub fn new(p: Arc<dyn Hittable>, angle: f64) -> Self {
+impl<H: Hittable> RotateY<H> {
+    pub fn new(ptr: H, angle: f64) -> Self {
         let radians = degrees_to_radians(angle);
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
@@ -94,7 +96,7 @@ impl RotateY {
         let mut min = Vec3::new(INFINITY, INFINITY, INFINITY);
         let mut max = Vec3::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY);
 
-        let mut bbox = p.bounding_box(0., 1.);
+        let mut bbox = ptr.bounding_box(0., 1.);
         //time0 = 0., time1 = 1.
         if let Some(box_) = bbox {
             for i in 0..2 {
@@ -119,7 +121,7 @@ impl RotateY {
         }
 
         Self {
-            ptr: p,
+            ptr,
             sin_theta,
             cos_theta,
             bbox,
@@ -127,7 +129,7 @@ impl RotateY {
     }
 }
 
-impl Hittable for RotateY {
+impl<H: Hittable> Hittable for RotateY<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut origin = r.origin();
         let mut direction = r.direction();
@@ -163,17 +165,18 @@ impl Hittable for RotateY {
     }
 }
 
-pub struct FlipFace {
-    ptr: Arc<dyn Hittable>,
+#[derive(Clone)]
+pub struct FlipFace<H: Hittable> {
+    ptr: H,
 }
 
-impl FlipFace {
-    pub fn new(ptr: Arc<dyn Hittable>) -> Self {
+impl<H: Hittable> FlipFace<H> {
+    pub fn new(ptr: H) -> Self {
         Self { ptr }
     }
 }
 
-impl Hittable for FlipFace {
+impl<H: Hittable> Hittable for FlipFace<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         if let Some(mut rec) = self.ptr.hit(r, t_min, t_max) {
             rec.front_face = !rec.front_face;

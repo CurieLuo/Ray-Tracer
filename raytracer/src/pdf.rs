@@ -5,6 +5,7 @@ pub trait Pdf {
     fn generate(&self) -> Vec3;
 } // probability density function
 
+#[derive(Clone)]
 pub struct CosinePdf {
     pub uvw: Onb,
 }
@@ -23,16 +24,17 @@ impl Pdf for CosinePdf {
     }
 }
 
-pub struct HittablePdf {
+#[derive(Clone)]
+pub struct HittablePdf<'a> {
     pub o: Point3,
-    pub ptr: Arc<dyn Hittable>,
+    pub ptr: &'a dyn Hittable,
 }
-impl HittablePdf {
-    pub fn new(ptr: Arc<dyn Hittable>, o: Point3) -> Self {
+impl<'a> HittablePdf<'a> {
+    pub fn new(ptr: &'a dyn Hittable, o: Point3) -> Self {
         Self { o, ptr }
     }
 }
-impl Pdf for HittablePdf {
+impl<'a> Pdf for HittablePdf<'a> {
     fn value(&self, direction: Vec3) -> f64 {
         self.ptr.pdf_value(self.o, direction)
     }
@@ -41,17 +43,19 @@ impl Pdf for HittablePdf {
         self.ptr.random(self.o)
     }
 }
-pub struct MixturePdf {
-    pub p0: Arc<dyn Pdf>,
-    pub p1: Arc<dyn Pdf>,
+
+#[derive(Clone)]
+pub struct MixturePdf<'a> {
+    pub p0: &'a dyn Pdf,
+    pub p1: &'a dyn Pdf,
     pub wt0: f64,
 }
-impl MixturePdf {
-    pub fn new(p0: Arc<dyn Pdf>, p1: Arc<dyn Pdf>, wt0: f64) -> Self {
+impl<'a> MixturePdf<'a> {
+    pub fn new(p0: &'a dyn Pdf, p1: &'a dyn Pdf, wt0: f64) -> Self {
         Self { p0, p1, wt0 }
     }
 }
-impl Pdf for MixturePdf {
+impl<'a> Pdf for MixturePdf<'a> {
     fn value(&self, direction: Vec3) -> f64 {
         self.wt0 * self.p0.value(direction) + (1. - self.wt0) * self.p1.value(direction)
     }

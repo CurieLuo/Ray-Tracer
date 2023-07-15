@@ -1,6 +1,7 @@
 use crate::utility::*;
 use rand::prelude::SliceRandom;
 
+#[derive(Clone)]
 pub struct Perlin {
     ranvec: Vec<Vec3>,
     perm_x: Vec<usize>,

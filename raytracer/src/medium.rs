@@ -1,24 +1,23 @@
 use crate::{aabb::*, hittable::*, material::*, texture::*, utility::*};
 
-use std::sync::Arc;
-
-pub struct ConstantMedium {
-    boundary: Arc<dyn Hittable>,
+#[derive(Clone)]
+pub struct ConstantMedium<H: Hittable, M: Material> {
+    boundary: H,
     neg_inv_density: f64,
-    phase_function: Arc<dyn Material>,
+    phase_function: M,
 }
 
-impl ConstantMedium {
-    pub fn new_color(boundary: Arc<dyn Hittable>, d: f64, c: Color) -> Self {
+impl<H: Hittable> ConstantMedium<H, Isotropic<SolidColor>> {
+    pub fn new_color(boundary: H, d: f64, c: Color) -> Self {
         ConstantMedium {
             boundary,
             neg_inv_density: -1. / d,
-            phase_function: Arc::new(Isotropic::new_color(c)),
+            phase_function: Isotropic::new_color(c),
         }
     }
 }
 
-impl Hittable for ConstantMedium {
+impl<H: Hittable, M: Material> Hittable for ConstantMedium<H, M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         // Print occasional samples when debugging. To enable, set enableDebugtrue.
         let rec1 = self.boundary.hit(r, NEG_INFINITY, INFINITY);
@@ -45,7 +44,7 @@ impl Hittable for ConstantMedium {
         rec1.t += hit_distance / ray_length;
         rec1.p = r.at(rec1.t);
 
-        rec1.mat_ptr = self.phase_function.clone();
+        rec1.mat_ptr = &self.phase_function;
 
         Some(rec1)
     }
@@ -55,21 +54,22 @@ impl Hittable for ConstantMedium {
     }
 }
 
-pub struct Isotropic {
-    pub albedo: Arc<dyn Texture>,
+pub struct Isotropic<T: Texture> {
+    pub albedo: T,
 }
 
-impl Isotropic {
-    pub fn new(albedo: Arc<dyn Texture>) -> Self {
+impl Isotropic<SolidColor> {
+    pub fn new_color(c: Color) -> Self {
+        Self::new(SolidColor::new(c))
+    }
+}
+impl<T: Texture> Isotropic<T> {
+    pub fn new(albedo: T) -> Self {
         Isotropic { albedo }
     }
-
-    pub fn new_color(c: Color) -> Self {
-        Self::new(Arc::new(SolidColor::new(c)))
-    }
 }
 
-impl Material for Isotropic {
+impl<T: Texture> Material for Isotropic<T> {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let scattered = Ray::new(rec.p, random_unit_vector(), r_in.time());
         let attenuation = self.albedo.value(rec.u, rec.v, rec.p);

@@ -15,14 +15,14 @@ pub fn get_sphere_uv(p: Point3) -> (f64, f64) {
 }
 
 #[derive(Clone)]
-pub struct Sphere {
+pub struct Sphere<M: Material> {
     pub center: Point3,
     pub radius: f64,
-    pub mat_ptr: Arc<dyn Material>,
+    pub mat_ptr: M,
 }
 
-impl Sphere {
-    pub fn new(center: Point3, radius: f64, mat_ptr: Arc<dyn Material>) -> Self {
+impl<M: Material> Sphere<M> {
+    pub fn new(center: Point3, radius: f64, mat_ptr: M) -> Self {
         Self {
             center,
             radius,
@@ -31,7 +31,7 @@ impl Sphere {
     }
 }
 
-impl Hittable for Sphere {
+impl<M: Material> Hittable for Sphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin() - self.center;
         let a = r.direction().length_squared();
@@ -53,7 +53,7 @@ impl Hittable for Sphere {
         }
         let p = r.at(root);
         let outward_normal = (p - self.center) / self.radius;
-        let mat_ptr = self.mat_ptr.clone();
+        let mat_ptr = &self.mat_ptr;
         let (u, v) = get_sphere_uv(outward_normal);
         let mut rec = HitRecord::new(root, p, mat_ptr, u, v);
         rec.set_face_normal(r, outward_normal);
@@ -84,7 +84,7 @@ impl Hittable for Sphere {
 }
 
 #[derive(Clone)]
-pub struct MovingSphere {
+pub struct MovingSphere<M: Material> {
     pub center0: Point3,
     // pub move_dir: Vec3,
     pub center1: Point3,
@@ -92,17 +92,17 @@ pub struct MovingSphere {
     //pub time_tot: f64,
     pub time1: f64,
     pub radius: f64,
-    pub mat_ptr: Arc<dyn Material>,
+    pub mat_ptr: M,
 }
 
-impl MovingSphere {
+impl<M: Material> MovingSphere<M> {
     pub fn new(
         center0: Point3,
         center1: Point3,
         time0: f64,
         time1: f64,
         radius: f64,
-        mat_ptr: Arc<dyn Material>,
+        mat_ptr: M,
     ) -> Self {
         Self {
             center0,
@@ -121,7 +121,7 @@ impl MovingSphere {
     }
 }
 
-impl Hittable for MovingSphere {
+impl<M: Material> Hittable for MovingSphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin() - self.center(r.time());
         let a = r.direction().length_squared();
@@ -143,7 +143,7 @@ impl Hittable for MovingSphere {
         }
         let p = r.at(root);
         let outward_normal = (p - self.center(r.time())) / self.radius;
-        let mat_ptr = self.mat_ptr.clone();
+        let mat_ptr = &self.mat_ptr;
         let (u, v) = get_sphere_uv(outward_normal);
         let mut rec = HitRecord::new(root, p, mat_ptr, u, v);
         rec.set_face_normal(r, outward_normal);
@@ -160,4 +160,5 @@ impl Hittable for MovingSphere {
         );
         Some(surrounding_box(&box0, &box1))
     }
+    // TODO pdf related methods
 }

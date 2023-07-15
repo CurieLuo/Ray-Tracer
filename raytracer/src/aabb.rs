@@ -1,6 +1,6 @@
 use crate::utility::*;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct Aabb {
     pub minimum: Point3,
     pub maximum: Point3,

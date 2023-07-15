@@ -11,9 +11,11 @@ impl HittableList {
             objects: Vec::new(),
         }
     }
-
     pub fn add(&mut self, object: Arc<dyn Hittable>) {
         self.objects.push(object);
+    }
+    pub fn is_empty(&self) -> bool {
+        self.objects.is_empty()
     }
 }
 
@@ -25,7 +27,7 @@ impl Hittable for HittableList {
         for object in self.objects.iter() {
             if let Some(temp_rec) = object.hit(r, t_min, closest_so_far) {
                 closest_so_far = temp_rec.t;
-                rec = Some(temp_rec.clone());
+                rec = Some(temp_rec);
             }
         }
 
