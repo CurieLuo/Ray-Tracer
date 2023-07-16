@@ -1,4 +1,4 @@
-use crate::{aabb::*, hittable::*, utility::*};
+use crate::hittable::*;
 
 #[derive(Clone)]
 pub struct HittableList {

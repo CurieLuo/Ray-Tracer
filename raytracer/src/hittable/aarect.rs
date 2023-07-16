@@ -1,4 +1,4 @@
-use crate::{aabb::*, hittable::*, material::*, utility::*};
+use crate::hittable::*;
 
 #[derive(Clone)]
 pub struct XYRect<M: Material> {

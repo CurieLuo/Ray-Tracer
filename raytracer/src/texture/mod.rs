@@ -1,5 +1,7 @@
-use crate::{perlin::*, utility::*};
+use crate::utility::*;
 use image::GenericImageView;
+use perlin::*;
+pub mod perlin;
 
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Color;

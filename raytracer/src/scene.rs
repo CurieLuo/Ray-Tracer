@@ -1,6 +1,6 @@
 use crate::{
-    aarect::*, bvh::*, cornell_box::*, hittable::*, hittable_list::*, material::*, medium::*,
-    sphere::*, texture::*, utility::*,
+    aarect::*, bvh::*, hittable_list::*, material::*, medium::*, rect_box::*, sphere::*,
+    texture::*, transform::*, utility::*,
 };
 
 pub fn final_scene() -> (HittableList, HittableList) {
@@ -17,7 +17,7 @@ pub fn final_scene() -> (HittableList, HittableList) {
             let x1 = x0 + w;
             let y1 = randrange(1., 101.);
             let z1 = z0 + w;
-            boxes1.add(Arc::new(CornellBox::new(
+            boxes1.add(Arc::new(RectBox::new(
                 Point3::new(x0, y0, z0),
                 Point3::new(x1, y1, z1),
                 ground.clone(),
@@ -72,7 +72,7 @@ pub fn final_scene() -> (HittableList, HittableList) {
         Color::new(1., 1., 1.),
     )));
 
-    let emat = Lambertian::new_texture(ImageTexture::new("earthmap.jpg"));
+    let emat = Lambertian::new_texture(ImageTexture::new("image/earthmap.jpg"));
     objects.add(Arc::new(Sphere::new(
         Point3::new(400., 200., 400.),
         100.,
@@ -139,7 +139,7 @@ pub fn cornell_box() -> (HittableList, HittableList) {
     )));
 
     // let aluminum = Metal::new(Color::new(0.8, 0.85, 0.88), 0.));
-    let box1 = CornellBox::new(
+    let box1 = RectBox::new(
         Point3::new(0., 0., 0.),
         Point3::new(165., 330., 165.),
         white,
@@ -155,7 +155,7 @@ pub fn cornell_box() -> (HittableList, HittableList) {
     lights.add(ball1.clone());
     objects.add(ball1);
 
-    // let box2 = CornellBox::new(
+    // let box2 = RectBox::new(
     //     Point3::new(0., 0., 0.),
     //     Point3::new(165., 165., 165.),
     //     white,

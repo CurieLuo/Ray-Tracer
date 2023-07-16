@@ -5,7 +5,7 @@ pub struct Onb {
     pub u: Vec3,
     pub v: Vec3,
     pub w: Vec3,
-} //orthonormal basis
+} // orthonormal basis
 
 impl Onb {
     pub fn local3(&self, a: f64, b: f64, c: f64) -> Vec3 {

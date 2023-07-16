@@ -1,18 +1,17 @@
 use crate::{hittable::HitRecord, pdf::*, texture::*, utility::*};
 
-#[derive(Clone)]
 pub struct ScatterRecord {
     pub scattered: Ray,
     pub is_specular: bool,
     pub attenuation: Color,
-    pub pdf_ptr: Option<Arc<dyn Pdf>>,
+    pub pdf_ptr: Option<Box<dyn Pdf>>,
 }
 impl ScatterRecord {
     pub fn new(
         scattered: Ray,
         is_specular: bool,
         attenuation: Color,
-        pdf_ptr: Option<Arc<dyn Pdf>>,
+        pdf_ptr: Option<Box<dyn Pdf>>,
     ) -> Self {
         Self {
             scattered,
@@ -54,7 +53,7 @@ impl Lambertian<SolidColor> {
 impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
-        let pdf_ptr = Arc::new(CosinePdf::new(rec.normal));
+        let pdf_ptr = Box::new(CosinePdf::new(rec.normal));
 
         Some(ScatterRecord::new(
             Ray::default(),

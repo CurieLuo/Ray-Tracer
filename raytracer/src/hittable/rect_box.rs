@@ -1,12 +1,12 @@
-use crate::{aabb::*, aarect::*, hittable::*, hittable_list::*, material::*, utility::*};
+use crate::{aarect::*, hittable::*, hittable_list::*};
 
-pub struct CornellBox {
+pub struct RectBox {
     pub box_min: Point3,
     pub box_max: Point3,
     pub sides: HittableList,
 }
 
-impl CornellBox {
+impl RectBox {
     pub fn new<M: Material + Clone + 'static>(p0: Point3, p1: Point3, ptr: M) -> Self {
         let mut sides = HittableList::new();
 
@@ -60,7 +60,7 @@ impl CornellBox {
     }
 }
 
-impl Hittable for CornellBox {
+impl Hittable for RectBox {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         self.sides.hit(r, t_min, t_max)
     }

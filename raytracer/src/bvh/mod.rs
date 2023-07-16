@@ -1,4 +1,6 @@
-use crate::{aabb::*, hittable::*, hittable_list::*, utility::*};
+use crate::{hittable::*, hittable_list::*, utility::*};
+use aabb::*;
+pub mod aabb;
 
 #[derive(Clone)]
 pub struct BvhNode {

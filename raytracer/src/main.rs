@@ -15,24 +15,15 @@ use pdf::*;
 use scene::*;
 use utility::*;
 
-mod aabb;
-mod aarect;
 mod bvh;
 mod camera;
-mod cornell_box;
 mod hittable;
-mod hittable_list;
 mod material;
-mod medium;
 mod onb;
 mod pdf;
-mod perlin;
-mod ray;
 mod scene;
-mod sphere;
 mod texture;
 mod utility;
-mod vec3;
 
 fn ray_color(
     r: &Ray,

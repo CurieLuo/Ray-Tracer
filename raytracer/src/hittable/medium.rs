@@ -1,4 +1,4 @@
-use crate::{aabb::*, hittable::*, material::*, texture::*, utility::*};
+use crate::{hittable::*, material::*, texture::*};
 
 #[derive(Clone)]
 pub struct ConstantMedium<H: Hittable, M: Material> {

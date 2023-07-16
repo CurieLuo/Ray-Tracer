@@ -1,4 +1,4 @@
-use crate::{aabb::*, hittable::*, material::Material, onb::*, utility::*};
+use crate::{hittable::*, material::Material, onb::*};
 
 pub fn get_sphere_uv(p: Point3) -> (f64, f64) {
     // p: a given point on the sphere of radius one, centered at the origin (outward_normal).
