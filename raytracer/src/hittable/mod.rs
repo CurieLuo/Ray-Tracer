@@ -6,6 +6,7 @@ pub mod medium;
 pub mod rect_box;
 pub mod sphere;
 pub mod transform;
+pub mod triangle;
 
 pub struct HitRecord<'a> {
     pub t: f64,
@@ -31,7 +32,7 @@ impl<'a> HitRecord<'a> {
         }
     }
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: Vec3) {
-        self.front_face = dot(r.direction(), outward_normal) < 0.;
+        self.front_face = dot(r.direction, outward_normal) < 0.;
         self.normal = if self.front_face {
             outward_normal
         } else {

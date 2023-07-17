@@ -1,13 +1,29 @@
 use crate::{
-    aarect::*, bvh::*, hittable_list::*, material::*, medium::*, rect_box::*, sphere::*,
-    texture::*, transform::*, utility::*,
+    aarect::*, bvh::*, hittable_list::*, material::*, medium::*, obj_file::*, rect_box::*,
+    sphere::*, texture::*, transform::*, utility::*,
 };
+
+pub fn test() -> (HittableList, HittableList) {
+    let mut world;
+    let lights;
+    (world, lights) = cornell_box();
+
+    let albedo = Color::randrange(0.5, 1.);
+    let fuzz = randrange(0., 0.5);
+    let material = Metal::new(albedo, fuzz);
+    // let albedo = Color::random() * Color::random();
+    // let material = Lambertian::new(albedo);
+    world.add(Arc::new(Translate::new(
+        BvhNode::new(&load_obj("object/cat.obj", material, 0.5), 0., 1.),
+        Vec3::new(200., 0., 0.),
+    )));
+    (world, lights)
+}
 
 pub fn final_scene() -> (HittableList, HittableList) {
     let mut boxes1 = HittableList::new();
     let ground = Lambertian::new(Color::new(0.48, 0.83, 0.53));
     let boxes_per_side = 20;
-
     for i in 0..boxes_per_side {
         for j in 0..boxes_per_side {
             let w = 100.;
@@ -129,31 +145,23 @@ pub fn cornell_box() -> (HittableList, HittableList) {
         555.,
         white.clone(),
     )));
-    objects.add(Arc::new(XYRect::new(
-        0.,
-        555.,
-        0.,
-        555.,
-        555.,
-        white.clone(),
-    )));
+    objects.add(Arc::new(XYRect::new(0., 555., 0., 555., 555., white)));
 
-    // let aluminum = Metal::new(Color::new(0.8, 0.85, 0.88), 0.));
-    let box1 = RectBox::new(
-        Point3::new(0., 0., 0.),
-        Point3::new(165., 330., 165.),
-        white,
-    );
-    let box1 = Arc::new(Translate::new(
-        RotateY::new(box1, 15.),
-        Vec3::new(265., 0., 295.),
-    ));
-    objects.add(box1);
+    // let box1 = RectBox::new(
+    //     Point3::new(0., 0., 0.),
+    //     Point3::new(165., 330., 165.),
+    //     white,
+    // );
+    // let box1 = Arc::new(Translate::new(
+    //     RotateY::new(box1, 15.),
+    //     Vec3::new(265., 0., 295.),
+    // ));
+    // objects.add(box1);
 
-    let glass = Dielectric::new(1.5);
-    let ball1 = Arc::new(Sphere::new(Point3::new(190., 90., 90.), 90., glass));
-    lights.add(ball1.clone());
-    objects.add(ball1);
+    // let glass = Dielectric::new(1.5);
+    // let ball1 = Arc::new(Sphere::new(Point3::new(190., 90., 90.), 90., glass));
+    // lights.add(ball1.clone());
+    // objects.add(ball1);
 
     // let box2 = RectBox::new(
     //     Point3::new(0., 0., 0.),

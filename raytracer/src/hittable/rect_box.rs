@@ -1,8 +1,7 @@
 use crate::{aarect::*, hittable::*, hittable_list::*};
 
 pub struct RectBox {
-    pub box_min: Point3,
-    pub box_max: Point3,
+    pub bbox: Aabb,
     pub sides: HittableList,
 }
 
@@ -53,8 +52,7 @@ impl RectBox {
         sides.add(Arc::new(YZRect::new(p0.y, p1.y, p0.z, p1.z, p0.x, ptr)));
 
         Self {
-            box_min: p0,
-            box_max: p1,
+            bbox: Aabb::new(p0, p1),
             sides,
         }
     }
@@ -66,6 +64,6 @@ impl Hittable for RectBox {
     }
 
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
-        Some(Aabb::new(self.box_min, self.box_max))
+        Some(self.bbox)
     }
 }

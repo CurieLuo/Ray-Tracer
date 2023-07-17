@@ -19,6 +19,7 @@ mod bvh;
 mod camera;
 mod hittable;
 mod material;
+mod obj_file;
 mod onb;
 mod pdf;
 mod scene;
@@ -41,8 +42,8 @@ fn ray_color(
             // TODO both specular and diffusive
             if let Some(pdf_ptr) = srec.pdf_ptr {
                 if lights.is_empty() {
-                    let scattered = Ray::new(rec.p, pdf_ptr.generate().unit(), r.time());
-                    let pdf_val = pdf_ptr.value(scattered.direction());
+                    let scattered = Ray::new(rec.p, pdf_ptr.generate().unit(), r.time);
+                    let pdf_val = pdf_ptr.value(scattered.direction);
 
                     emitted
                         + srec.attenuation
@@ -52,8 +53,8 @@ fn ray_color(
                 } else {
                     let light_ptr = HittablePdf::new(lights, rec.p);
                     let mixed_pdf = MixturePdf::new(&light_ptr, pdf_ptr.as_ref(), 0.5);
-                    let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time());
-                    let pdf_val = mixed_pdf.value(scattered.direction());
+                    let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time);
+                    let pdf_val = mixed_pdf.value(scattered.direction);
 
                     emitted
                         + srec.attenuation
@@ -125,12 +126,20 @@ fn main() {
             lookat = Point3::new(0., 2., 0.);
             vfov = 20.;
         }
-        _ => {
+        4 => {
             (world, lights) = final_scene();
             width = 800;
             samples_per_pixel = 100;
             max_depth = 50;
             lookfrom = Point3::new(478., 278., -600.);
+            lookat = Point3::new(278., 278., 0.);
+            vfov = 40.;
+        }
+        _ => {
+            (world, lights) = test();
+            width = 600;
+            samples_per_pixel = 100;
+            lookfrom = Point3::new(278., 278., -800.);
             lookat = Point3::new(278., 278., 0.);
             vfov = 40.;
         }

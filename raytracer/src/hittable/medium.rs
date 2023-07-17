@@ -33,7 +33,7 @@ impl<H: Hittable, M: Material> Hittable for ConstantMedium<H, M> {
             return None;
         }
 
-        let ray_length = r.direction().length();
+        let ray_length = r.direction.length();
         let distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
         let hit_distance = self.neg_inv_density * random().ln();
 
@@ -54,6 +54,7 @@ impl<H: Hittable, M: Material> Hittable for ConstantMedium<H, M> {
     }
 }
 
+#[derive(Clone)]
 pub struct Isotropic<T: Texture> {
     pub albedo: T,
 }
@@ -71,7 +72,7 @@ impl<T: Texture> Isotropic<T> {
 
 impl<T: Texture> Material for Isotropic<T> {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let scattered = Ray::new(rec.p, random_unit_vector(), r_in.time());
+        let scattered = Ray::new(rec.p, random_unit_vector(), r_in.time);
         let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
 
         Some(ScatterRecord::new(scattered, false, attenuation, None))

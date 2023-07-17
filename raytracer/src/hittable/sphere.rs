@@ -1,4 +1,4 @@
-use crate::{hittable::*, material::Material, onb::*};
+use crate::{hittable::*, onb::*};
 
 pub fn get_sphere_uv(p: Point3) -> (f64, f64) {
     // p: a given point on the sphere of radius one, centered at the origin (outward_normal).
@@ -33,9 +33,9 @@ impl<M: Material> Sphere<M> {
 
 impl<M: Material> Hittable for Sphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let oc = r.origin() - self.center;
-        let a = r.direction().length_squared();
-        let half_b = dot(oc, r.direction());
+        let oc = r.origin - self.center;
+        let a = r.direction.length_squared();
+        let half_b = dot(oc, r.direction);
         let c = oc.length_squared() - self.radius * self.radius;
 
         let discriminant = half_b * half_b - a * c;
@@ -123,9 +123,9 @@ impl<M: Material> MovingSphere<M> {
 
 impl<M: Material> Hittable for MovingSphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let oc = r.origin() - self.center(r.time());
-        let a = r.direction().length_squared();
-        let half_b = dot(oc, r.direction());
+        let oc = r.origin - self.center(r.time);
+        let a = r.direction.length_squared();
+        let half_b = dot(oc, r.direction);
         let c = oc.length_squared() - self.radius * self.radius;
 
         let discriminant = half_b * half_b - a * c;
@@ -142,7 +142,7 @@ impl<M: Material> Hittable for MovingSphere<M> {
             }
         }
         let p = r.at(root);
-        let outward_normal = (p - self.center(r.time())) / self.radius;
+        let outward_normal = (p - self.center(r.time)) / self.radius;
         let mat_ptr = &self.mat_ptr;
         let (u, v) = get_sphere_uv(outward_normal);
         let mut rec = HitRecord::new(root, p, mat_ptr, u, v);

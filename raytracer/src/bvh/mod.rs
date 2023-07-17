@@ -35,11 +35,11 @@ impl BvhNode {
             right = left.clone();
         } else {
             //? unwrap might cause error
-            objects[start..end].sort_by_cached_key(|x| {
-                x.bounding_box(time0, time1).unwrap().mn().get(axis) as i32
+            objects[start..end].sort_unstable_by(|a, b| {
+                let ka = a.bounding_box(time0, time1).unwrap().min.get(axis);
+                let kb = b.bounding_box(time0, time1).unwrap().min.get(axis);
+                f64::partial_cmp(&ka, &kb).unwrap()
             });
-            //sort_unstable_by_key
-            //TODO partial comparator
             if object_span == 2 {
                 left = objects[start].clone();
                 right = objects[start + 1].clone();

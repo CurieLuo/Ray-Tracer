@@ -63,7 +63,7 @@ impl<T: Texture> Material for Lambertian<T> {
         ))
     }
     fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
-        let cosine = dot(rec.normal, scattered.direction().unit());
+        let cosine = dot(rec.normal, scattered.direction.unit());
         cosine.max(0.) / PI
     }
 }
@@ -109,11 +109,11 @@ impl Metal {
 }
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let reflected = reflect(r_in.direction().unit(), rec.normal);
+        let reflected = reflect(r_in.direction.unit(), rec.normal);
         let scattered = Ray::new(
             rec.p,
             reflected + self.fuzz * random_in_unit_sphere(),
-            r_in.time(),
+            r_in.time,
         );
 
         Some(ScatterRecord::new(scattered, true, self.albedo, None))
@@ -141,7 +141,7 @@ impl Material for Dielectric {
         } else {
             self.ir
         };
-        let unit_direction = r_in.direction().unit();
+        let unit_direction = r_in.direction.unit();
         let cos_theta = dot(-unit_direction, rec.normal).min(1.);
         let sin_theta = (1. - cos_theta * cos_theta).sqrt();
         let cannot_refract = refraction_ratio * sin_theta > 1.;
@@ -151,7 +151,7 @@ impl Material for Dielectric {
             } else {
                 refract(unit_direction, rec.normal, refraction_ratio)
             };
-        let scattered = Ray::new(rec.p, direction, r_in.time());
+        let scattered = Ray::new(rec.p, direction, r_in.time);
         Some(ScatterRecord::new(
             scattered,
             true,

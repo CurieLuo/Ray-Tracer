@@ -69,6 +69,7 @@ impl Texture for NoiseTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct ImageTexture {
     data: Vec<[u8; 3]>,
     width: usize,
@@ -76,8 +77,8 @@ pub struct ImageTexture {
 }
 
 impl ImageTexture {
-    pub fn new(filename: &str) -> Self {
-        let image = image::open(filename).expect("Failed to open image");
+    pub fn new(file_name: &str) -> Self {
+        let image = image::open(file_name).expect("Failed to open image");
         let width = image.width() as usize;
         let height = image.height() as usize;
         let mut data = vec![[0u8; 3]; width * height];

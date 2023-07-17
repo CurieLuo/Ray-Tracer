@@ -14,7 +14,7 @@ impl<H: Hittable> Translate<H> {
 
 impl<H: Hittable> Hittable for Translate<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let moved_r = Ray::new(r.origin() - self.offset, r.direction(), r.time());
+        let moved_r = Ray::new(r.origin - self.offset, r.direction, r.time);
         if let Some(mut rec) = self.ptr.hit(&moved_r, t_min, t_max) {
             rec.p += self.offset;
             return Some(rec);
@@ -24,8 +24,8 @@ impl<H: Hittable> Hittable for Translate<H> {
 
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
         if let Some(mut output_box) = self.ptr.bounding_box(time0, time1) {
-            output_box.minimum += self.offset;
-            output_box.maximum += self.offset;
+            output_box.min += self.offset;
+            output_box.max += self.offset;
             Some(output_box)
         } else {
             None
@@ -56,9 +56,9 @@ impl<H: Hittable> RotateY<H> {
             for i in 0..2 {
                 for j in 0..2 {
                     for k in 0..2 {
-                        let x = i as f64 * box_.mx().x + (1 - i) as f64 * box_.mn().x;
-                        let y = j as f64 * box_.mx().y + (1 - j) as f64 * box_.mn().y;
-                        let z = k as f64 * box_.mx().z + (1 - k) as f64 * box_.mn().z;
+                        let x = i as f64 * box_.max.x + (1 - i) as f64 * box_.min.x;
+                        let y = j as f64 * box_.max.y + (1 - j) as f64 * box_.min.y;
+                        let z = k as f64 * box_.max.z + (1 - k) as f64 * box_.min.z;
 
                         let new_x = cos_theta * x + sin_theta * z;
                         let new_z = -sin_theta * x + cos_theta * z;
@@ -85,15 +85,14 @@ impl<H: Hittable> RotateY<H> {
 
 impl<H: Hittable> Hittable for RotateY<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let mut origin = r.origin();
-        let mut direction = r.direction();
+        let mut origin = r.origin;
+        let mut direction = r.direction;
 
-        origin.x = self.cos_theta * r.origin().x - self.sin_theta * r.origin().z;
-        origin.z = self.sin_theta * r.origin().x + self.cos_theta * r.origin().z;
-
-        direction.x = self.cos_theta * r.direction().x - self.sin_theta * r.direction().z;
-        direction.z = self.sin_theta * r.direction().x + self.cos_theta * r.direction().z;
-        let rotated_r = Ray::new(origin, direction, r.time());
+        origin.x = self.cos_theta * r.origin.x - self.sin_theta * r.origin.z;
+        origin.z = self.sin_theta * r.origin.x + self.cos_theta * r.origin.z;
+        direction.x = self.cos_theta * r.direction.x - self.sin_theta * r.direction.z;
+        direction.z = self.sin_theta * r.direction.x + self.cos_theta * r.direction.z;
+        let rotated_r = Ray::new(origin, direction, r.time);
 
         if let Some(mut rec) = self.ptr.hit(&rotated_r, t_min, t_max) {
             let mut p = rec.p;

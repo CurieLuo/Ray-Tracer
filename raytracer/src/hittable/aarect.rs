@@ -25,13 +25,13 @@ impl<M: Material> XYRect<M> {
 
 impl<M: Material> Hittable for XYRect<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let t = (self.k - r.origin().z) / r.direction().z;
+        let t = (self.k - r.origin.z) / r.direction.z;
         if t < t_min || t > t_max {
             return None;
         }
 
-        let x = r.origin().x + t * r.direction().x;
-        let y = r.origin().y + t * r.direction().y;
+        let x = r.origin.x + t * r.direction.x;
+        let y = r.origin.y + t * r.direction.y;
         if x < self.x0 || x > self.x1 || y < self.y0 || y > self.y1 {
             return None;
         }
@@ -97,13 +97,13 @@ impl<M: Material> XZRect<M> {
 
 impl<M: Material> Hittable for XZRect<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let t = (self.k - r.origin().y) / r.direction().y;
+        let t = (self.k - r.origin.y) / r.direction.y;
         if t < t_min || t > t_max {
             return None;
         }
 
-        let x = r.origin().x + t * r.direction().x;
-        let z = r.origin().z + t * r.direction().z;
+        let x = r.origin.x + t * r.direction.x;
+        let z = r.origin.z + t * r.direction.z;
         if x < self.x0 || x > self.x1 || z < self.z0 || z > self.z1 {
             return None;
         }
@@ -169,13 +169,13 @@ impl<M: Material> YZRect<M> {
 
 impl<M: Material> Hittable for YZRect<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let t = (self.k - r.origin().x) / r.direction().x;
+        let t = (self.k - r.origin.x) / r.direction.x;
         if t < t_min || t > t_max {
             return None;
         }
 
-        let y = r.origin().y + t * r.direction().y;
-        let z = r.origin().z + t * r.direction().z;
+        let y = r.origin.y + t * r.direction.y;
+        let z = r.origin.z + t * r.direction.z;
         if y < self.y0 || y > self.y1 || z < self.z0 || z > self.z1 {
             return None;
         }
