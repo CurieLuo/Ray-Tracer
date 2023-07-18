@@ -141,9 +141,9 @@ fn main() {
         _ => {
             (world, lights) = test();
             aspect_ratio = 16. / 9.;
-            width = 600 / 3;
-            samples_per_pixel = 100 / 4;
-            max_depth = 20;
+            width = 600;
+            samples_per_pixel = 100;
+            max_depth = 50;
             lookfrom = Point3::new(0., 0., 1000.);
             lookat = Point3::new(0., 0., 0.);
             background = Color::new(0.70, 0.80, 1.00);
