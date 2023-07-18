@@ -7,7 +7,7 @@ pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Color;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct SolidColor {
     color_value: Color,
 }
@@ -22,7 +22,7 @@ impl Texture for SolidColor {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct CheckerTexture<T0: Texture, T1: Texture> {
     pub even: T0,
     pub odd: T1,

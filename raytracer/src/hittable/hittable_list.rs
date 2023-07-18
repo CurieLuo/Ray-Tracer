@@ -14,7 +14,7 @@ impl HittableList {
     pub fn add(&mut self, object: Arc<dyn Hittable>) {
         self.objects.push(object);
     }
-    pub fn is_empty(&self) -> bool {
+    pub fn _is_empty(&self) -> bool {
         self.objects.is_empty()
     }
 }

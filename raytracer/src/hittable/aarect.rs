@@ -1,6 +1,6 @@
 use crate::hittable::*;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct XYRect<M: Material> {
     mp: M,
     x0: f64,
@@ -72,7 +72,7 @@ impl<M: Material> Hittable for XYRect<M> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct XZRect<M: Material> {
     mp: M,
     x0: f64,
@@ -144,7 +144,7 @@ impl<M: Material> Hittable for XZRect<M> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct YZRect<M: Material> {
     mp: M,
     y0: f64,

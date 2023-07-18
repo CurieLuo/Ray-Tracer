@@ -28,7 +28,7 @@ impl BvhNode {
     ) -> Self {
         let left;
         let right;
-        let axis = randint(0, 3);
+        let axis = randint(0, 3) as usize;
         let object_span = end - start;
         if object_span == 1 {
             left = objects[start].clone();
@@ -36,8 +36,8 @@ impl BvhNode {
         } else {
             //? unwrap might cause error
             objects[start..end].sort_unstable_by(|a, b| {
-                let ka = a.bounding_box(time0, time1).unwrap().min.get(axis);
-                let kb = b.bounding_box(time0, time1).unwrap().min.get(axis);
+                let ka = a.bounding_box(time0, time1).unwrap().min[axis];
+                let kb = b.bounding_box(time0, time1).unwrap().min[axis];
                 f64::partial_cmp(&ka, &kb).unwrap()
             });
             if object_span == 2 {
@@ -50,7 +50,7 @@ impl BvhNode {
             }
         }
         //? unwrap might cause error
-        //should use Option<box>, where None stands for infinity (R^3)
+        //should use Option<>, where None stands for infinity (in R^3 space)
         let box_left = left.bounding_box(time0, time1).unwrap();
         let box_right = right.bounding_box(time0, time1).unwrap();
         Self {

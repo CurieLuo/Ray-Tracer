@@ -6,49 +6,14 @@ pub struct RectBox {
 }
 
 impl RectBox {
-    pub fn new<M: Material + Clone + 'static>(p0: Point3, p1: Point3, ptr: M) -> Self {
+    pub fn new<M: Material + Clone + Copy + 'static>(p0: Point3, p1: Point3, ptr: M) -> Self {
         let mut sides = HittableList::new();
 
-        sides.add(Arc::new(XYRect::new(
-            p0.x,
-            p1.x,
-            p0.y,
-            p1.y,
-            p1.z,
-            ptr.clone(),
-        )));
-        sides.add(Arc::new(XYRect::new(
-            p0.x,
-            p1.x,
-            p0.y,
-            p1.y,
-            p0.z,
-            ptr.clone(),
-        )));
-        sides.add(Arc::new(XZRect::new(
-            p0.x,
-            p1.x,
-            p0.z,
-            p1.z,
-            p1.y,
-            ptr.clone(),
-        )));
-        sides.add(Arc::new(XZRect::new(
-            p0.x,
-            p1.x,
-            p0.z,
-            p1.z,
-            p0.y,
-            ptr.clone(),
-        )));
-        sides.add(Arc::new(YZRect::new(
-            p0.y,
-            p1.y,
-            p0.z,
-            p1.z,
-            p1.x,
-            ptr.clone(),
-        )));
+        sides.add(Arc::new(XYRect::new(p0.x, p1.x, p0.y, p1.y, p1.z, ptr)));
+        sides.add(Arc::new(XYRect::new(p0.x, p1.x, p0.y, p1.y, p0.z, ptr)));
+        sides.add(Arc::new(XZRect::new(p0.x, p1.x, p0.z, p1.z, p1.y, ptr)));
+        sides.add(Arc::new(XZRect::new(p0.x, p1.x, p0.z, p1.z, p0.y, ptr)));
+        sides.add(Arc::new(YZRect::new(p0.y, p1.y, p0.z, p1.z, p1.x, ptr)));
         sides.add(Arc::new(YZRect::new(p0.y, p1.y, p0.z, p1.z, p0.x, ptr)));
 
         Self {

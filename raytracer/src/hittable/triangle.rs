@@ -1,6 +1,6 @@
 use crate::hittable::*;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Triangle<M: Material> {
     pub a: Point3,
     pub n: Vec3,
@@ -31,8 +31,8 @@ impl<M: Material> Triangle<M> {
         let mut min = Point3::default();
         let mut max = Point3::default();
         for i in 0..3 {
-            *min.at(i) = f64::min(f64::min(a.get(i), b.get(i)), c.get(i)) - 0.0001;
-            *max.at(i) = f64::max(f64::max(a.get(i), b.get(i)), c.get(i)) + 0.0001;
+            min[i] = f64::min(f64::min(a[i], b[i]), c[i]) - 0.0001;
+            max[i] = f64::max(f64::max(a[i], b[i]), c[i]) + 0.0001;
         }
         let uva = Vec3::new(ua, va, 0.);
         let uvab = Vec3::new(ub, vb, 0.) - uva;

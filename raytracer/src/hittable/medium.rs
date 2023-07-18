@@ -1,6 +1,6 @@
 use crate::{hittable::*, material::*, texture::*};
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct ConstantMedium<H: Hittable, M: Material> {
     boundary: H,
     neg_inv_density: f64,
@@ -54,7 +54,7 @@ impl<H: Hittable, M: Material> Hittable for ConstantMedium<H, M> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Isotropic<T: Texture> {
     pub albedo: T,
 }
@@ -75,7 +75,13 @@ impl<T: Texture> Material for Isotropic<T> {
         let scattered = Ray::new(rec.p, random_unit_vector(), r_in.time);
         let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
 
-        Some(ScatterRecord::new(scattered, false, attenuation, None))
+        Some(ScatterRecord::new(scattered, attenuation))
+    }
+    fn _scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<_ScatterRecord> {
+        let scattered = Ray::new(rec.p, random_unit_vector(), r_in.time);
+        let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
+
+        Some(_ScatterRecord::new(scattered, false, attenuation, None))
         // TODO is_specular?
     }
 }

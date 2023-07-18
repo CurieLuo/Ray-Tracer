@@ -5,7 +5,7 @@ pub trait Pdf {
     fn generate(&self) -> Vec3;
 } // probability density function
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct CosinePdf {
     pub uvw: Onb,
 }
@@ -24,13 +24,13 @@ impl Pdf for CosinePdf {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct HittablePdf<'a> {
     pub o: Point3,
     pub ptr: &'a dyn Hittable,
 }
 impl<'a> HittablePdf<'a> {
-    pub fn new(ptr: &'a dyn Hittable, o: Point3) -> Self {
+    pub fn _new(ptr: &'a dyn Hittable, o: Point3) -> Self {
         Self { o, ptr }
     }
 }
@@ -44,14 +44,14 @@ impl<'a> Pdf for HittablePdf<'a> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct MixturePdf<'a> {
     pub p0: &'a dyn Pdf,
     pub p1: &'a dyn Pdf,
     pub wt0: f64,
 }
 impl<'a> MixturePdf<'a> {
-    pub fn new(p0: &'a dyn Pdf, p1: &'a dyn Pdf, wt0: f64) -> Self {
+    pub fn _new(p0: &'a dyn Pdf, p1: &'a dyn Pdf, wt0: f64) -> Self {
         Self { p0, p1, wt0 }
     }
 }

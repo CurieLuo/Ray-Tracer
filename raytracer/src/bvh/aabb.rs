@@ -15,9 +15,9 @@ impl Aabb {
 impl Aabb {
     pub fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> bool {
         for a in 0..3 {
-            let inv_da = 1. / r.direction.get(a);
-            let t0 = (self.min.get(a) - r.origin.get(a)) * inv_da;
-            let t1 = (self.max.get(a) - r.origin.get(a)) * inv_da;
+            let inv_da = 1. / r.direction[a];
+            let t0 = (self.min[a] - r.origin[a]) * inv_da;
+            let t1 = (self.max[a] - r.origin[a]) * inv_da;
             let (t0, t1) = if inv_da < 0. { (t1, t0) } else { (t0, t1) };
             let t_min = t_min.max(t0);
             let t_max = t_max.min(t1);

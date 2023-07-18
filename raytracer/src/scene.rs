@@ -3,43 +3,63 @@ use crate::{
     sphere::*, texture::*, transform::*, utility::*,
 };
 
-pub fn test() -> (HittableList, HittableList) {
-    let mut world;
-    let lights;
-    (world, lights) = (HittableList::new(), HittableList::new());
+pub fn test() -> HittableList {
+    let mut world = HittableList::new();
+    // let material = Lambertian::new(Color::random() * Color::random());
 
-    // let albedo = Color::random() * Color::random();
-    // let material = Lambertian::new(albedo);
+    let aircraft_material =
+        Lambertian::new_texture(ImageTexture::new("image/E-45-Aircraft/E-45_col.jpg"));
+    let aircraft = Arc::new(Translate::new(
+        RotateY::new(
+            BvhNode::new(
+                &load_obj("object/E-45-Aircraft.obj", aircraft_material, 50.0),
+                0.,
+                1.,
+            ),
+            70.,
+        ),
+        Vec3::new(-250., 100., 200.),
+    ));
+    world.add(aircraft);
 
     let ironman_material =
         Lambertian::new_texture(ImageTexture::new("image/Iron_Man/Iron_Man_Diffuse.png"));
     let ironman = Arc::new(Translate::new(
-        RotateY::new(
-            BvhNode::new(
-                &load_obj("object/IronMan.obj", ironman_material, 50.0),
-                0.,
-                1.,
+        RotateX::new(
+            RotateY::new(
+                BvhNode::new(
+                    &load_obj("object/IronMan.obj", ironman_material, 80.0),
+                    0.,
+                    1.,
+                ),
+                -30.,
             ),
-            0.,
+            -5.,
         ),
-        Vec3::new(0., -190., 300.),
+        Vec3::new(350., -190., 100.),
     ));
     world.add(ironman);
 
     let book_material = Lambertian::new_texture(ImageTexture::new("image/book/baseColor.png"));
     let book = Arc::new(Translate::new(
         RotateY::new(
-            BvhNode::new(&load_obj("object/book.obj", book_material, 50.0), 0., 1.),
-            0.,
+            RotateZ::new(
+                RotateX::new(
+                    BvhNode::new(&load_obj("object/book.obj", book_material, 30.0), 0., 1.),
+                    90.,
+                ),
+                20.,
+            ),
+            30.,
         ),
-        Vec3::new(0., -220., 300.),
+        Vec3::new(70., 180., 100.),
     ));
     world.add(book);
 
-    (world, lights)
+    world
 }
 
-pub fn final_scene() -> (HittableList, HittableList) {
+pub fn final_scene() -> HittableList {
     let mut boxes1 = HittableList::new();
     let ground = Lambertian::new(Color::new(0.48, 0.83, 0.53));
     let boxes_per_side = 20;
@@ -55,7 +75,7 @@ pub fn final_scene() -> (HittableList, HittableList) {
             boxes1.add(Arc::new(RectBox::new(
                 Point3::new(x0, y0, z0),
                 Point3::new(x1, y1, z1),
-                ground.clone(),
+                ground,
             )));
         }
     }
@@ -64,10 +84,10 @@ pub fn final_scene() -> (HittableList, HittableList) {
     objects.add(Arc::new(BvhNode::new(&boxes1, 0., 1.)));
 
     let light = DiffuseLight::new_color(Color::new(7., 7., 7.));
+    // let mut lights = HittableList::new();
+    // lights.add(Arc::new(light1));
     let light1 = XZRect::new(123., 423., 147., 412., 554., light);
-    objects.add(Arc::new(FlipFace::new(light1.clone())));
-    let mut lights = HittableList::new();
-    lights.add(Arc::new(light1));
+    objects.add(Arc::new(FlipFace::new(light1)));
 
     let center1 = Point3::new(400., 400., 200.);
     let center2 = center1 + Vec3::new(30., 0., 0.);
@@ -93,7 +113,7 @@ pub fn final_scene() -> (HittableList, HittableList) {
     )));
 
     let boundary = Sphere::new(Point3::new(360., 150., 145.), 70., Dielectric::new(1.5));
-    objects.add(Arc::new(boundary.clone()));
+    objects.add(Arc::new(boundary));
     objects.add(Arc::new(ConstantMedium::new_color(
         boundary,
         0.2,
@@ -128,7 +148,7 @@ pub fn final_scene() -> (HittableList, HittableList) {
         boxes2.add(Arc::new(Sphere::new(
             Point3::randrange(0., 165.),
             10.,
-            white.clone(),
+            white,
         )));
     }
 
@@ -137,12 +157,12 @@ pub fn final_scene() -> (HittableList, HittableList) {
         Vec3::new(-100., 270., 395.),
     )));
 
-    (objects, lights)
+    objects
 }
 
-pub fn cornell_box() -> (HittableList, HittableList) {
+pub fn cornell_box() -> HittableList {
     let mut objects = HittableList::new();
-    let mut lights = HittableList::new();
+    // let mut lights = HittableList::new();
 
     let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
     let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
@@ -150,20 +170,13 @@ pub fn cornell_box() -> (HittableList, HittableList) {
     let light = DiffuseLight::new_color(Color::new(15., 15., 15.) * 4.);
 
     let light1 = XZRect::new(213., 343., 227., 332., 554., light);
-    lights.add(Arc::new(light1.clone()));
+    // lights.add(Arc::new(light1));
     objects.add(Arc::new(FlipFace::new(light1)));
 
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 555., green)));
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 0., red)));
-    objects.add(Arc::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
-    objects.add(Arc::new(XZRect::new(
-        0.,
-        555.,
-        0.,
-        555.,
-        555.,
-        white.clone(),
-    )));
+    objects.add(Arc::new(XZRect::new(0., 555., 0., 555., 0., white)));
+    objects.add(Arc::new(XZRect::new(0., 555., 0., 555., 555., white)));
     objects.add(Arc::new(XYRect::new(0., 555., 0., 555., 555., white)));
 
     // let box1 = RectBox::new(
@@ -179,7 +192,7 @@ pub fn cornell_box() -> (HittableList, HittableList) {
 
     // let glass = Dielectric::new(1.5);
     // let ball1 = Arc::new(Sphere::new(Point3::new(190., 90., 90.), 90., glass));
-    // lights.add(ball1.clone());
+    // lights.add(ball1);
     // objects.add(ball1);
 
     // let box2 = RectBox::new(
@@ -193,12 +206,12 @@ pub fn cornell_box() -> (HittableList, HittableList) {
     // ));
     // objects.add(box2);
 
-    (objects, lights)
+    objects
 }
 
-pub fn simple_light() -> (HittableList, HittableList) {
+pub fn simple_light() -> HittableList {
     let mut objects = HittableList::new();
-    let mut lights = HittableList::new();
+    // let mut lights = HittableList::new();
 
     let pertext = NoiseTexture::new(4.);
     objects.add(Arc::new(Sphere::new(
@@ -214,17 +227,17 @@ pub fn simple_light() -> (HittableList, HittableList) {
     )));
 
     let difflight = DiffuseLight::new_color(Color::new(4., 4., 4.));
-    let light1 = Arc::new(Sphere::new(Point3::new(0., 7., 0.), 2., difflight.clone()));
-    lights.add(light1.clone());
+    let light1 = Arc::new(Sphere::new(Point3::new(0., 7., 0.), 2., difflight));
+    // lights.add(light1);
     objects.add(light1);
     let light2 = Arc::new(XYRect::new(3., 5., 1., 3., -2., difflight));
-    lights.add(light2.clone());
+    // lights.add(light2);
     objects.add(light2);
 
-    (objects, lights)
+    objects
 }
 
-pub fn random_scene() -> (HittableList, HittableList) {
+pub fn random_scene() -> HittableList {
     let time0 = 0.;
     let time1 = 1.;
     let mut world = HittableList::new();
@@ -298,5 +311,5 @@ pub fn random_scene() -> (HittableList, HittableList) {
         Lambertian::new_texture(checker),
     )));
 
-    (world_with_ground, HittableList::new())
+    world_with_ground
 }

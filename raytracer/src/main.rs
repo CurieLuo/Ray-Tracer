@@ -26,7 +26,7 @@ mod scene;
 mod texture;
 mod utility;
 
-fn ray_color(
+fn _ray_color(
     r: &Ray,
     background: Color,
     world: &HittableList,
@@ -38,35 +38,51 @@ fn ray_color(
     }
     if let Some(rec) = world.hit(r, 0.001, INFINITY) {
         let emitted: Vec3 = rec.mat_ptr.emitted(&rec, rec.u, rec.v, rec.p);
-        if let Some(srec) = rec.mat_ptr.scatter(r, &rec) {
+        if let Some(srec) = rec.mat_ptr._scatter(r, &rec) {
             // TODO both specular and diffusive
             if let Some(pdf_ptr) = srec.pdf_ptr {
-                if lights.is_empty() {
+                if lights._is_empty() {
                     let scattered = Ray::new(rec.p, pdf_ptr.generate().unit(), r.time);
                     let pdf_val = pdf_ptr.value(scattered.direction);
 
                     emitted
                         + srec.attenuation
-                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-                            * ray_color(&scattered, background, world, lights, depth - 1)
+                            * rec.mat_ptr._scattering_pdf(r, &rec, &scattered)
+                            * _ray_color(&scattered, background, world, lights, depth - 1)
                             / pdf_val
                 } else {
-                    let light_ptr = HittablePdf::new(lights, rec.p);
-                    let mixed_pdf = MixturePdf::new(&light_ptr, pdf_ptr.as_ref(), 0.5);
+                    let light_ptr = HittablePdf::_new(lights, rec.p);
+                    let mixed_pdf = MixturePdf::_new(&light_ptr, pdf_ptr.as_ref(), 0.5);
                     let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time);
                     let pdf_val = mixed_pdf.value(scattered.direction);
 
                     emitted
                         + srec.attenuation
-                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-                            * ray_color(&scattered, background, world, lights, depth - 1)
+                            * rec.mat_ptr._scattering_pdf(r, &rec, &scattered)
+                            * _ray_color(&scattered, background, world, lights, depth - 1)
                             / pdf_val
                 }
             } else {
                 emitted
                     + srec.attenuation
-                        * ray_color(&srec.scattered, background, world, lights, depth - 1)
+                        * _ray_color(&srec.scattered, background, world, lights, depth - 1)
             }
+        } else {
+            emitted
+        }
+    } else {
+        background
+    }
+}
+
+fn ray_color(r: &Ray, background: Color, world: &HittableList, depth: i32) -> Color {
+    if depth <= 0 {
+        return Color::new(0., 0., 0.);
+    }
+    if let Some(rec) = world.hit(r, 0.001, INFINITY) {
+        let emitted: Vec3 = rec.mat_ptr.emitted(&rec, rec.u, rec.v, rec.p);
+        if let Some(srec) = rec.mat_ptr.scatter(r, &rec) {
+            emitted + srec.attenuation * ray_color(&srec.scattered, background, world, depth - 1)
         } else {
             emitted
         }
@@ -97,16 +113,26 @@ fn main() {
     let mut background = Color::new(0., 0., 0.);
 
     let world;
-    let lights;
     match 0 {
+        0 => {
+            world = test();
+            aspect_ratio = 16. / 9.;
+            width = 600 / 1;
+            samples_per_pixel = 100 / 1;
+            max_depth = 50 / 1;
+            lookfrom = Point3::new(0., 0., 1000.);
+            lookat = Point3::new(0., 0., 0.);
+            background = Color::new(0.70, 0.80, 1.00);
+            vfov = 45.;
+        }
         1 => {
-            (world, lights) = random_scene();
-            // aspect_ratio = 16. / 9.;
-            // width = 400;
-            // samples_per_pixel = 100;
-            aspect_ratio = 3. / 2.;
-            width = 1200;
-            samples_per_pixel = 500;
+            world = random_scene();
+            aspect_ratio = 16. / 9.;
+            width = 400;
+            samples_per_pixel = 100;
+            // aspect_ratio = 3. / 2.;
+            // width = 1200;
+            // samples_per_pixel = 500;
             lookfrom = Point3::new(13., 2., 3.);
             lookat = Point3::new(0., 0., 0.);
             background = Color::new(0.70, 0.80, 1.00);
@@ -114,7 +140,7 @@ fn main() {
             vfov = 20.;
         }
         2 => {
-            (world, lights) = cornell_box();
+            world = cornell_box();
             width = 600;
             samples_per_pixel = 200;
             lookfrom = Point3::new(278., 278., -800.);
@@ -122,31 +148,20 @@ fn main() {
             vfov = 40.;
         }
         3 => {
-            (world, lights) = simple_light();
+            world = simple_light();
             width = 400;
             samples_per_pixel = 400;
             lookfrom = Point3::new(26., 3., 6.);
             lookat = Point3::new(0., 2., 0.);
             vfov = 20.;
         }
-        4 => {
-            (world, lights) = final_scene();
+        _ => {
+            world = final_scene();
             width = 800;
             samples_per_pixel = 100;
             max_depth = 50;
             lookfrom = Point3::new(478., 278., -600.);
             lookat = Point3::new(278., 278., 0.);
-            vfov = 40.;
-        }
-        _ => {
-            (world, lights) = test();
-            aspect_ratio = 16. / 9.;
-            width = 600;
-            samples_per_pixel = 100;
-            max_depth = 50;
-            lookfrom = Point3::new(0., 0., 1000.);
-            lookat = Point3::new(0., 0., 0.);
-            background = Color::new(0.70, 0.80, 1.00);
             vfov = 40.;
         }
     }
@@ -170,7 +185,7 @@ fn main() {
 
     // Render
     const THREAD_NUM: usize = 14;
-    const BATCH_SIZE: u32 = 32; // optimize progress bar
+    const BATCH_SIZE: u32 = 64; // optimize progress bar
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
     let mut receiver_list = Vec::new();
@@ -186,7 +201,6 @@ fn main() {
         let (tx, rx) = mpsc::channel();
         receiver_list.push(rx);
         let world_ = world.clone();
-        let lights_ = lights.clone();
         let progress_bar = multi_progress.add(ProgressBar::new(
             (width * height / THREAD_NUM as u32 / BATCH_SIZE) as u64,
         ));
@@ -199,11 +213,11 @@ fn main() {
                     let u = ((i as f64) + random()) / ((width - 1) as f64);
                     let v = ((j as f64) + random()) / ((height - 1) as f64);
                     let ray = cam.get_ray(u, v, time0, time1);
-                    pixel_color += ray_color(&ray, background, &world_, &lights_, max_depth);
+                    pixel_color += ray_color(&ray, background, &world_, max_depth);
                 }
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {
-                    *pixel_color.at(_i) = clamp(pixel_color.get(_i).sqrt(), 0., 0.99);
+                    pixel_color[_i] = clamp(pixel_color[_i].sqrt(), 0., 0.99);
                 }
                 pixel_color *= 256.;
                 result.push((i, j, pixel_color));
