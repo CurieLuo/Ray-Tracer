@@ -6,17 +6,36 @@ use crate::{
 pub fn test() -> (HittableList, HittableList) {
     let mut world;
     let lights;
-    (world, lights) = cornell_box();
+    (world, lights) = (HittableList::new(), HittableList::new());
 
-    let albedo = Color::randrange(0.5, 1.);
-    let fuzz = randrange(0., 0.5);
-    let material = Metal::new(albedo, fuzz);
     // let albedo = Color::random() * Color::random();
     // let material = Lambertian::new(albedo);
-    world.add(Arc::new(Translate::new(
-        BvhNode::new(&load_obj("object/cat.obj", material, 0.5), 0., 1.),
-        Vec3::new(200., 0., 0.),
-    )));
+
+    let ironman_material =
+        Lambertian::new_texture(ImageTexture::new("image/Iron_Man/Iron_Man_Diffuse.png"));
+    let ironman = Arc::new(Translate::new(
+        RotateY::new(
+            BvhNode::new(
+                &load_obj("object/IronMan.obj", ironman_material, 50.0),
+                0.,
+                1.,
+            ),
+            0.,
+        ),
+        Vec3::new(0., -190., 300.),
+    ));
+    world.add(ironman);
+
+    let book_material = Lambertian::new_texture(ImageTexture::new("image/book/baseColor.png"));
+    let book = Arc::new(Translate::new(
+        RotateY::new(
+            BvhNode::new(&load_obj("object/book.obj", book_material, 50.0), 0., 1.),
+            0.,
+        ),
+        Vec3::new(0., -220., 300.),
+    ));
+    world.add(book);
+
     (world, lights)
 }
 
@@ -128,7 +147,7 @@ pub fn cornell_box() -> (HittableList, HittableList) {
     let red = Lambertian::new(Color::new(0.65, 0.05, 0.05));
     let white = Lambertian::new(Color::new(0.73, 0.73, 0.73));
     let green = Lambertian::new(Color::new(0.12, 0.45, 0.15));
-    let light = DiffuseLight::new_color(Color::new(15., 15., 15.));
+    let light = DiffuseLight::new_color(Color::new(15., 15., 15.) * 4.);
 
     let light1 = XZRect::new(213., 343., 227., 332., 554., light);
     lights.add(Arc::new(light1.clone()));

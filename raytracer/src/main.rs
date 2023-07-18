@@ -76,7 +76,7 @@ fn ray_color(
 }
 
 fn main() {
-    let path = std::path::Path::new("output/test/test1.jpg");
+    let path = std::path::Path::new("output/test/test2.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -98,12 +98,15 @@ fn main() {
 
     let world;
     let lights;
-    match 0 {
+    match 1 {
         1 => {
             (world, lights) = random_scene();
-            aspect_ratio = 16. / 9.; //3. / 2.
-            width = 400; // 1200
-            samples_per_pixel = 100; // 500
+            // aspect_ratio = 16. / 9.;
+            // width = 400;
+            // samples_per_pixel = 100;
+            aspect_ratio = 3. / 2.;
+            width = 1200;
+            samples_per_pixel = 500;
             lookfrom = Point3::new(13., 2., 3.);
             lookat = Point3::new(0., 0., 0.);
             background = Color::new(0.70, 0.80, 1.00);
@@ -137,10 +140,13 @@ fn main() {
         }
         _ => {
             (world, lights) = test();
-            width = 600;
-            samples_per_pixel = 100;
-            lookfrom = Point3::new(278., 278., -800.);
-            lookat = Point3::new(278., 278., 0.);
+            aspect_ratio = 16. / 9.;
+            width = 600 / 3;
+            samples_per_pixel = 100 / 4;
+            max_depth = 20;
+            lookfrom = Point3::new(0., 0., 1000.);
+            lookat = Point3::new(0., 0., 0.);
+            background = Color::new(0.70, 0.80, 1.00);
             vfov = 40.;
         }
     }
@@ -159,7 +165,6 @@ fn main() {
         aperture,
         dist_to_focus,
     );
-
     // Progress Bar
     let multi_progress = MultiProgress::new();
 

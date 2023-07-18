@@ -1,5 +1,5 @@
 use crate::utility::*;
-use image::GenericImageView;
+use image::*;
 use perlin::*;
 pub mod perlin;
 
@@ -71,7 +71,7 @@ impl Texture for NoiseTexture {
 
 #[derive(Clone)]
 pub struct ImageTexture {
-    data: Vec<[u8; 3]>,
+    data: Arc<Vec<[u8; 3]>>,
     width: usize,
     height: usize,
 }
@@ -88,7 +88,7 @@ impl ImageTexture {
             }
         }
         Self {
-            data,
+            data: Arc::new(data),
             width,
             height,
         }
