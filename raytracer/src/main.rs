@@ -98,7 +98,7 @@ fn main() {
 
     let world;
     let lights;
-    match 1 {
+    match 0 {
         1 => {
             (world, lights) = random_scene();
             // aspect_ratio = 16. / 9.;
