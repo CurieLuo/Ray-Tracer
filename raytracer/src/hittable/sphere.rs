@@ -9,7 +9,7 @@ pub fn get_sphere_uv(p: Point3) -> (f64, f64) {
     // <0 0 1> yields <0.25 0.50> < 0 0 -1> yields <0.75 0.50>
     let theta = (-p.y).acos();
     let phi = f64::atan2(-p.z, p.x) + PI;
-    let u = phi / (2. * PI);
+    let u = phi / TAU;
     let v = theta / PI;
     (u, v)
 }
@@ -72,7 +72,7 @@ impl<M: Material> Hittable for Sphere<M> {
             return 0.;
         }
         let cos_theta_max = (1. - self.radius.powi(2) / (self.center - o).length_squared()).sqrt();
-        let solid_angle = 2. * PI * (1. - cos_theta_max);
+        let solid_angle = TAU * (1. - cos_theta_max);
         1. / solid_angle
     }
     fn random(&self, o: Point3) -> Vec3 {

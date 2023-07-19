@@ -2,7 +2,10 @@ pub use ray::*;
 pub use vec3::*;
 // use rand::prelude::*;
 pub use std::{
-    f64::{consts::PI, INFINITY, NEG_INFINITY},
+    f64::{
+        consts::{PI, TAU},
+        INFINITY, NEG_INFINITY,
+    },
     sync::Arc,
 };
 pub mod ray;
@@ -10,10 +13,6 @@ pub mod vec3;
 
 pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
     x.clamp(min, max)
-}
-
-pub fn degrees_to_radians(degrees: f64) -> f64 {
-    degrees * PI / 180.
 }
 
 pub fn random() -> f64 {

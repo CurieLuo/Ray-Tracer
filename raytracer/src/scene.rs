@@ -3,7 +3,7 @@ use crate::{
     sphere::*, texture::*, transform::*, utility::*,
 };
 
-pub fn test() -> HittableList {
+pub fn test1() -> HittableList {
     let mut world = HittableList::new();
     // let material = Lambertian::new(Color::random() * Color::random());
 
@@ -50,7 +50,7 @@ pub fn test() -> HittableList {
                 ),
                 20.,
             ),
-            30.,
+            45.,
         ),
         Vec3::new(70., 180., 100.),
     ));

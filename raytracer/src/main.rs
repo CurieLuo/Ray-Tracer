@@ -113,9 +113,9 @@ fn main() {
     let mut background = Color::new(0., 0., 0.);
 
     let world;
-    match 0 {
-        0 => {
-            world = test();
+    match 1 {
+        1 => {
+            world = test1();
             aspect_ratio = 16. / 9.;
             width = 600;
             samples_per_pixel = 100;
@@ -125,45 +125,47 @@ fn main() {
             background = Color::new(0.70, 0.80, 1.00);
             vfov = 45.;
         }
-        1 => {
-            world = random_scene();
-            aspect_ratio = 16. / 9.;
-            width = 400;
-            samples_per_pixel = 100;
-            // aspect_ratio = 3. / 2.;
-            // width = 1200;
-            // samples_per_pixel = 500;
-            lookfrom = Point3::new(13., 2., 3.);
-            lookat = Point3::new(0., 0., 0.);
-            background = Color::new(0.70, 0.80, 1.00);
-            aperture = 0.1;
-            vfov = 20.;
-        }
-        2 => {
-            world = cornell_box();
-            width = 600;
-            samples_per_pixel = 200;
-            lookfrom = Point3::new(278., 278., -800.);
-            lookat = Point3::new(278., 278., 0.);
-            vfov = 40.;
-        }
-        3 => {
-            world = simple_light();
-            width = 400;
-            samples_per_pixel = 400;
-            lookfrom = Point3::new(26., 3., 6.);
-            lookat = Point3::new(0., 2., 0.);
-            vfov = 20.;
-        }
-        _ => {
-            world = final_scene();
-            width = 800;
-            samples_per_pixel = 100;
-            max_depth = 50;
-            lookfrom = Point3::new(478., 278., -600.);
-            lookat = Point3::new(278., 278., 0.);
-            vfov = 40.;
-        }
+        _ => match 0 {
+            1 => {
+                world = random_scene();
+                aspect_ratio = 16. / 9.;
+                width = 400;
+                samples_per_pixel = 100;
+                // aspect_ratio = 3. / 2.;
+                // width = 1200;
+                // samples_per_pixel = 500;
+                lookfrom = Point3::new(13., 2., 3.);
+                lookat = Point3::new(0., 0., 0.);
+                background = Color::new(0.70, 0.80, 1.00);
+                aperture = 0.1;
+                vfov = 20.;
+            }
+            2 => {
+                world = cornell_box();
+                width = 600;
+                samples_per_pixel = 200;
+                lookfrom = Point3::new(278., 278., -800.);
+                lookat = Point3::new(278., 278., 0.);
+                vfov = 40.;
+            }
+            3 => {
+                world = simple_light();
+                width = 400;
+                samples_per_pixel = 400;
+                lookfrom = Point3::new(26., 3., 6.);
+                lookat = Point3::new(0., 2., 0.);
+                vfov = 20.;
+            }
+            _ => {
+                world = final_scene();
+                width = 800;
+                samples_per_pixel = 100;
+                max_depth = 50;
+                lookfrom = Point3::new(478., 278., -600.);
+                lookat = Point3::new(278., 278., 0.);
+                vfov = 40.;
+            }
+        },
     }
 
     let height: u32 = (width as f64 / aspect_ratio) as u32;

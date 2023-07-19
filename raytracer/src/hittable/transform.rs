@@ -43,7 +43,7 @@ pub struct RotateY<H: Hittable> {
 
 impl<H: Hittable> RotateY<H> {
     pub fn new(ptr: H, angle: f64) -> Self {
-        let radians = degrees_to_radians(angle);
+        let radians = angle.to_radians();
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
 
@@ -105,7 +105,7 @@ impl<H: Hittable> Hittable for RotateY<H> {
             normal.z = -self.sin_theta * rec.normal.x + self.cos_theta * rec.normal.z;
 
             rec.p = p;
-            rec.set_face_normal(&rotated_r, normal);
+            rec.normal = normal;
 
             Some(rec)
         } else {
@@ -128,7 +128,7 @@ pub struct RotateX<H: Hittable> {
 
 impl<H: Hittable> RotateX<H> {
     pub fn new(ptr: H, angle: f64) -> Self {
-        let radians = degrees_to_radians(angle);
+        let radians = angle.to_radians();
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
 
@@ -190,7 +190,7 @@ impl<H: Hittable> Hittable for RotateX<H> {
             normal.z = self.sin_theta * rec.normal.y + self.cos_theta * rec.normal.z;
 
             rec.p = p;
-            rec.set_face_normal(&rotated_r, normal);
+            rec.normal = normal;
 
             Some(rec)
         } else {
@@ -213,7 +213,7 @@ pub struct RotateZ<H: Hittable> {
 
 impl<H: Hittable> RotateZ<H> {
     pub fn new(ptr: H, angle: f64) -> Self {
-        let radians = degrees_to_radians(angle);
+        let radians = angle.to_radians();
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
 
@@ -275,7 +275,7 @@ impl<H: Hittable> Hittable for RotateZ<H> {
             normal.y = self.sin_theta * rec.normal.x + self.cos_theta * rec.normal.y;
 
             rec.p = p;
-            rec.set_face_normal(&rotated_r, normal);
+            rec.normal = normal;
 
             Some(rec)
         } else {
