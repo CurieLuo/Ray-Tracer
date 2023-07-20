@@ -61,6 +61,13 @@ impl Vec3 {
         const S: f64 = 1e-8;
         self.x.abs() < S && self.y.abs() < S && self.z.abs() < S
     }
+
+    pub fn to_tuple(self) -> (f64, f64, f64) {
+        (self.x, self.y, self.z)
+    }
+    pub fn from_array<T: Index<usize, Output = f64>>(arr: &T) -> Self {
+        Self::new(arr[0], arr[1], arr[2])
+    }
 }
 
 pub fn dot(a: Vec3, b: Vec3) -> f64 {

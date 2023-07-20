@@ -13,3 +13,5 @@ rand = "0.8.5"
 # rand_distr = "0.4.1"
 # dyn-clone = "1.0.12"
 tobj = {version = "4.0.0", default-features = false, features = ["use_f64"]}
+# nalgebra = "0.32.3"
+ndarray = "0.15.6"

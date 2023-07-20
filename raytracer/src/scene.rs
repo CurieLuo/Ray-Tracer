@@ -1,63 +1,7 @@
 use crate::{
-    aarect::*, bvh::*, hittable_list::*, material::*, medium::*, obj_file::*, rect_box::*,
-    sphere::*, texture::*, transform::*, utility::*,
+    aarect::*, bvh::*, hittable_list::*, material::*, medium::*, rect_box::*, sphere::*,
+    texture::*, transform::*, utility::*,
 };
-
-pub fn test1() -> HittableList {
-    let mut world = HittableList::new();
-    // let material = Lambertian::new(Color::random() * Color::random());
-
-    let aircraft_material =
-        Lambertian::new_texture(ImageTexture::new("image/E-45-Aircraft/E-45_col.jpg"));
-    let aircraft = Arc::new(Translate::new(
-        RotateY::new(
-            BvhNode::new(
-                &load_obj("object/E-45-Aircraft.obj", aircraft_material, 50.0),
-                0.,
-                1.,
-            ),
-            70.,
-        ),
-        Vec3::new(-250., 100., 200.),
-    ));
-    world.add(aircraft);
-
-    let ironman_material =
-        Lambertian::new_texture(ImageTexture::new("image/Iron_Man/Iron_Man_Diffuse.png"));
-    let ironman = Arc::new(Translate::new(
-        RotateX::new(
-            RotateY::new(
-                BvhNode::new(
-                    &load_obj("object/IronMan.obj", ironman_material, 80.0),
-                    0.,
-                    1.,
-                ),
-                -30.,
-            ),
-            -5.,
-        ),
-        Vec3::new(350., -190., 100.),
-    ));
-    world.add(ironman);
-
-    let book_material = Lambertian::new_texture(ImageTexture::new("image/book/baseColor.png"));
-    let book = Arc::new(Translate::new(
-        RotateY::new(
-            RotateZ::new(
-                RotateX::new(
-                    BvhNode::new(&load_obj("object/book.obj", book_material, 30.0), 0., 1.),
-                    90.,
-                ),
-                20.,
-            ),
-            45.,
-        ),
-        Vec3::new(70., 180., 100.),
-    ));
-    world.add(book);
-
-    world
-}
 
 pub fn final_scene() -> HittableList {
     let mut boxes1 = HittableList::new();

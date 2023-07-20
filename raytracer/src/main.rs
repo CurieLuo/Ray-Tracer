@@ -13,6 +13,7 @@ use hittable::*;
 use hittable_list::*;
 use pdf::*;
 use scene::*;
+use scene_obj::*;
 use utility::*;
 
 mod bvh;
@@ -23,6 +24,7 @@ mod obj_file;
 mod onb;
 mod pdf;
 mod scene;
+mod scene_obj;
 mod texture;
 mod utility;
 
@@ -92,7 +94,7 @@ fn ray_color(r: &Ray, background: Color, world: &HittableList, depth: i32) -> Co
 }
 
 fn main() {
-    let path = std::path::Path::new("output/test/test2.jpg");
+    let path = std::path::Path::new("output/test/test3.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -238,7 +240,7 @@ fn main() {
     for receiver in receiver_list {
         let result = receiver.recv().unwrap();
         for (i, j, pixel_color) in result {
-            let (r, g, b) = (pixel_color.x, pixel_color.y, pixel_color.z);
+            let (r, g, b) = pixel_color.to_tuple();
             let pixel = img.get_pixel_mut(i, height - 1 - j);
             *pixel = image::Rgb([r as u8, g as u8, b as u8]);
         }

@@ -118,3 +118,5 @@ impl Texture for ImageTexture {
         ) / 255.
     }
 }
+
+pub type NormalTexture = ImageTexture;
