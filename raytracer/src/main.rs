@@ -14,6 +14,7 @@ use hittable_list::*;
 use pdf::*;
 use scene::*;
 use scene_obj::*;
+use texture::*;
 use utility::*;
 
 mod bvh;
@@ -30,7 +31,7 @@ mod utility;
 
 fn _ray_color(
     r: &Ray,
-    background: Color,
+    background: &Arc<dyn Texture>,
     world: &HittableList,
     lights: &HittableList,
     depth: i32,
@@ -73,11 +74,12 @@ fn _ray_color(
             emitted
         }
     } else {
-        background
+        let dir = r.direction.unit();
+        background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin)
     }
 }
 
-fn ray_color(r: &Ray, background: Color, world: &HittableList, depth: i32) -> Color {
+fn ray_color(r: &Ray, background: &Arc<dyn Texture>, world: &HittableList, depth: i32) -> Color {
     if depth <= 0 {
         return Color::new(0., 0., 0.);
     }
@@ -89,7 +91,8 @@ fn ray_color(r: &Ray, background: Color, world: &HittableList, depth: i32) -> Co
             emitted
         }
     } else {
-        background
+        let dir = r.direction.unit();
+        background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin)
     }
 }
 
@@ -112,7 +115,7 @@ fn main() {
     let lookat;
     let vfov;
     let mut aperture = 0.;
-    let mut background = Color::new(0., 0., 0.);
+    let mut background: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0., 0., 0.)));
 
     let world;
     match 1 {
@@ -124,7 +127,8 @@ fn main() {
             max_depth = 50;
             lookfrom = Point3::new(0., 0., 1000.);
             lookat = Point3::new(0., 0., 0.);
-            background = Color::new(0.70, 0.80, 1.00);
+            // background = Arc::new(ImageTexture::new("image/tortoise.jpg"));
+            background = Arc::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
             vfov = 45.;
         }
         _ => match 0 {
@@ -138,7 +142,7 @@ fn main() {
                 // samples_per_pixel = 500;
                 lookfrom = Point3::new(13., 2., 3.);
                 lookat = Point3::new(0., 0., 0.);
-                background = Color::new(0.70, 0.80, 1.00);
+                background = Arc::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
                 aperture = 0.1;
                 vfov = 20.;
             }
@@ -205,6 +209,7 @@ fn main() {
         let (tx, rx) = mpsc::channel();
         receiver_list.push(rx);
         let world_ = world.clone();
+        let background_ = background.clone();
         let progress_bar = multi_progress.add(ProgressBar::new(
             (width * height / THREAD_NUM as u32 / BATCH_SIZE) as u64,
         ));
@@ -217,7 +222,7 @@ fn main() {
                     let u = ((i as f64) + random()) / ((width - 1) as f64);
                     let v = ((j as f64) + random()) / ((height - 1) as f64);
                     let ray = cam.get_ray(u, v, time0, time1);
-                    pixel_color += ray_color(&ray, background, &world_, max_depth);
+                    pixel_color += ray_color(&ray, &background_, &world_, max_depth);
                 }
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {

@@ -1,5 +1,6 @@
+#![allow(dead_code)]
 use crate::{hittable::*, texture::*};
-use ndarray::{array, Array, Array2};
+use ndarray::array;
 
 #[derive(Clone, Copy)]
 pub struct Triangle<M: Material> {

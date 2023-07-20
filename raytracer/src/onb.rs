@@ -25,14 +25,4 @@ impl Onb {
         let u = cross(w, v);
         Self { u, v, w }
     }
-    // pub fn build_from_w(&mut self, n: Vec3) {
-    //     self.w = n.unit();
-    //     let a = if self.w.x.abs() > 0.9 {
-    //         Vec3::new(0., 1., 0.)
-    //     } else {
-    //         Vec3::new(1., 0., 0.)
-    //     };
-    //     self.v = cross(self.w, a);
-    //     self.u = cross(self.w, self.v);
-    // }
 }

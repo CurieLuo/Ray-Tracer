@@ -1,7 +1,19 @@
+#![allow(dead_code)]
 use crate::{
-    aarect::*, bvh::*, hittable::*, hittable_list::*, material::*, medium::*, obj_file::*,
-    rect_box::*, scene::*, sphere::*, texture::*, transform::*, utility::*,
+    bvh::*, hittable::*, hittable_list::*, material::*, obj_file::*, texture::*, transform::*,
+    utility::*,
 };
+
+pub fn test1() -> HittableList {
+    let mut world = HittableList::new();
+
+    world.add(aircraft());
+    world.add(iron_man());
+    world.add(book());
+    world.add(sword());
+
+    world
+}
 
 pub fn aircraft() -> Arc<dyn Hittable> {
     let material = Lambertian::new_texture(ImageTexture::new("image/E-45-Aircraft/E-45_col.jpg"));
@@ -101,7 +113,7 @@ pub fn sword() -> Arc<dyn Hittable> {
     ))
 }
 
-pub fn _stone_man() -> Arc<dyn Hittable> {
+pub fn stone_man() -> Arc<dyn Hittable> {
     let material = Lambertian::new_texture(ImageTexture::new("image/StoneMan/diffuse.tif"));
     Arc::new(Translate::new(
         RotateX::new(
@@ -122,15 +134,4 @@ pub fn _stone_man() -> Arc<dyn Hittable> {
         ),
         Vec3::new(350., -230., 100.),
     ))
-}
-
-pub fn test1() -> HittableList {
-    let mut world = HittableList::new();
-
-    world.add(aircraft());
-    world.add(iron_man());
-    world.add(book());
-    world.add(sword());
-
-    world
 }

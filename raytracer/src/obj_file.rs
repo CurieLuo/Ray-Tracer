@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::{
     bvh::*, hittable_list::*, material::*, texture::NormalTexture, triangle::*, utility::*,
 };
