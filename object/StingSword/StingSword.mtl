@@ -1,0 +1,6 @@
+newmtl Sting
+map_Kd textures/Sting_Base_Color.png
+map_Ks textures/Sting_Metallic.png
+map_Ke textures/Sting_Emissive.png
+map_Ns textures/Sting_Roughness.png
+map_Bump textures/Sting_Normal.png

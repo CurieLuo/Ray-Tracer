@@ -16,7 +16,7 @@ impl CosinePdf {
 }
 impl Pdf for CosinePdf {
     fn value(&self, direction: Vec3) -> f64 {
-        let cosine = dot(direction.unit(), self.uvw.w);
+        let cosine = dot(direction, self.uvw.w);
         cosine.max(0.) / PI
     }
     fn generate(&self) -> Vec3 {

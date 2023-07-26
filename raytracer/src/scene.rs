@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::{
     aarect::*, bvh::*, hittable_list::*, material::*, medium::*, rect_box::*, sphere::*,
     texture::*, transform::*, utility::*,
@@ -16,7 +17,7 @@ pub fn final_scene() -> HittableList {
             let x1 = x0 + w;
             let y1 = randrange(1., 101.);
             let z1 = z0 + w;
-            boxes1.add(Arc::new(RectBox::new(
+            boxes1.add(Box::new(RectBox::new(
                 Point3::new(x0, y0, z0),
                 Point3::new(x1, y1, z1),
                 ground,
@@ -25,18 +26,18 @@ pub fn final_scene() -> HittableList {
     }
 
     let mut objects = HittableList::new();
-    objects.add(Arc::new(BvhNode::new(&boxes1, 0., 1.)));
+    objects.add(Box::new(BvhNode::new(boxes1, 0., 1.)));
 
     let light = DiffuseLight::new_color(Color::new(7., 7., 7.));
     // let mut lights = HittableList::new();
-    // lights.add(Arc::new(light1));
+    // lights.add(Box::new(light1));
     let light1 = XZRect::new(123., 423., 147., 412., 554., light);
-    objects.add(Arc::new(FlipFace::new(light1)));
+    objects.add(Box::new(FlipFace::new(light1)));
 
     let center1 = Point3::new(400., 400., 200.);
     let center2 = center1 + Vec3::new(30., 0., 0.);
     let moving_sphere_material = Lambertian::new(Color::new(0.7, 0.3, 0.1));
-    objects.add(Arc::new(MovingSphere::new(
+    objects.add(Box::new(MovingSphere::new(
         center1,
         center2,
         0.,
@@ -45,41 +46,41 @@ pub fn final_scene() -> HittableList {
         moving_sphere_material,
     )));
 
-    objects.add(Arc::new(Sphere::new(
+    objects.add(Box::new(Sphere::new(
         Point3::new(260., 150., 45.),
         50.,
         Dielectric::new(1.5),
     )));
-    objects.add(Arc::new(Sphere::new(
+    objects.add(Box::new(Sphere::new(
         Point3::new(0., 150., 145.),
         50.,
         Metal::new(Color::new(0.8, 0.8, 0.9), 1.),
     )));
 
     let boundary = Sphere::new(Point3::new(360., 150., 145.), 70., Dielectric::new(1.5));
-    objects.add(Arc::new(boundary));
-    objects.add(Arc::new(ConstantMedium::new_color(
+    objects.add(Box::new(boundary));
+    objects.add(Box::new(ConstantMedium::new_color(
         boundary,
         0.2,
         Color::new(0.2, 0.4, 0.9),
     )));
 
     let boundary = Sphere::new(Point3::new(0., 0., 0.), 5000., Dielectric::new(1.5));
-    objects.add(Arc::new(ConstantMedium::new_color(
+    objects.add(Box::new(ConstantMedium::new_color(
         boundary,
         0.0001,
         Color::new(1., 1., 1.),
     )));
 
     let emat = Lambertian::new_texture(ImageTexture::new("image/earthmap.jpg"));
-    objects.add(Arc::new(Sphere::new(
+    objects.add(Box::new(Sphere::new(
         Point3::new(400., 200., 400.),
         100.,
         emat,
     )));
 
     let pertext = NoiseTexture::new(0.1);
-    objects.add(Arc::new(Sphere::new(
+    objects.add(Box::new(Sphere::new(
         Point3::new(220., 280., 300.),
         80.,
         Lambertian::new_texture(pertext),
@@ -89,15 +90,15 @@ pub fn final_scene() -> HittableList {
     let ns = 1000;
 
     for _ in 0..ns {
-        boxes2.add(Arc::new(Sphere::new(
+        boxes2.add(Box::new(Sphere::new(
             Point3::randrange(0., 165.),
             10.,
             white,
         )));
     }
 
-    objects.add(Arc::new(Translate::new(
-        RotateY::new(BvhNode::new(&boxes2, 0., 1.), 15.),
+    objects.add(Box::new(Translate::new(
+        RotateY::new(BvhNode::new(boxes2, 0., 1.), 15.),
         Vec3::new(-100., 270., 395.),
     )));
 
@@ -114,28 +115,28 @@ pub fn cornell_box() -> HittableList {
     let light = DiffuseLight::new_color(Color::new(15., 15., 15.) * 4.);
 
     let light1 = XZRect::new(213., 343., 227., 332., 554., light);
-    // lights.add(Arc::new(light1));
-    objects.add(Arc::new(FlipFace::new(light1)));
+    // lights.add(Box::new(light1));
+    objects.add(Box::new(FlipFace::new(light1)));
 
-    objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 555., green)));
-    objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 0., red)));
-    objects.add(Arc::new(XZRect::new(0., 555., 0., 555., 0., white)));
-    objects.add(Arc::new(XZRect::new(0., 555., 0., 555., 555., white)));
-    objects.add(Arc::new(XYRect::new(0., 555., 0., 555., 555., white)));
+    objects.add(Box::new(YZRect::new(0., 555., 0., 555., 555., green)));
+    objects.add(Box::new(YZRect::new(0., 555., 0., 555., 0., red)));
+    objects.add(Box::new(XZRect::new(0., 555., 0., 555., 0., white)));
+    objects.add(Box::new(XZRect::new(0., 555., 0., 555., 555., white)));
+    objects.add(Box::new(XYRect::new(0., 555., 0., 555., 555., white)));
 
     // let box1 = RectBox::new(
     //     Point3::new(0., 0., 0.),
     //     Point3::new(165., 330., 165.),
     //     white,
     // );
-    // let box1 = Arc::new(Translate::new(
+    // let box1 = Box::new(Translate::new(
     //     RotateY::new(box1, 15.),
     //     Vec3::new(265., 0., 295.),
     // ));
     // objects.add(box1);
 
     // let glass = Dielectric::new(1.5);
-    // let ball1 = Arc::new(Sphere::new(Point3::new(190., 90., 90.), 90., glass));
+    // let ball1 = Box::new(Sphere::new(Point3::new(190., 90., 90.), 90., glass));
     // lights.add(ball1);
     // objects.add(ball1);
 
@@ -144,7 +145,7 @@ pub fn cornell_box() -> HittableList {
     //     Point3::new(165., 165., 165.),
     //     white,
     // );
-    // let box2 = Arc::new(Translate::new(
+    // let box2 = Box::new(Translate::new(
     //     RotateY::new(box2, -18.),
     //     Vec3::new(130., 0., 65.),
     // ));
@@ -158,23 +159,23 @@ pub fn simple_light() -> HittableList {
     // let mut lights = HittableList::new();
 
     let pertext = NoiseTexture::new(4.);
-    objects.add(Arc::new(Sphere::new(
+    objects.add(Box::new(Sphere::new(
         Point3::new(0., -1000., 0.),
         1000.,
         Lambertian::new_texture(pertext.clone()),
     )));
 
-    objects.add(Arc::new(Sphere::new(
+    objects.add(Box::new(Sphere::new(
         Point3::new(0., 2., 0.),
         2.,
         Lambertian::new_texture(pertext),
     )));
 
     let difflight = DiffuseLight::new_color(Color::new(4., 4., 4.));
-    let light1 = Arc::new(Sphere::new(Point3::new(0., 7., 0.), 2., difflight));
+    let light1 = Box::new(Sphere::new(Point3::new(0., 7., 0.), 2., difflight));
     // lights.add(light1);
     objects.add(light1);
-    let light2 = Arc::new(XYRect::new(3., 5., 1., 3., -2., difflight));
+    let light2 = Box::new(XYRect::new(3., 5., 1., 3., -2., difflight));
     // lights.add(light2);
     objects.add(light2);
 
@@ -184,10 +185,9 @@ pub fn simple_light() -> HittableList {
 pub fn random_scene() -> HittableList {
     let time0 = 0.;
     let time1 = 1.;
-    let mut world = HittableList::new();
-
-    for a in -11..11 {
-        for b in -11..11 {
+    let mut objects = HittableList::new();
+    for a in (-11..11).step_by(3) {
+        for b in (-11..11).step_by(3) {
             let choose_mat = random();
             let center = Point3::new(
                 (a as f64) + 0.9 * random(),
@@ -200,7 +200,7 @@ pub fn random_scene() -> HittableList {
                     let albedo = Color::random() * Color::random();
                     let sphere_material = Lambertian::new(albedo);
                     let center2 = center + Vec3::new(0., randrange(0., 0.5), 0.);
-                    world.add(Arc::new(MovingSphere::new(
+                    objects.add(Box::new(MovingSphere::new(
                         center,
                         center2,
                         time0,
@@ -213,47 +213,52 @@ pub fn random_scene() -> HittableList {
                     let albedo = Color::randrange(0.5, 1.);
                     let fuzz = randrange(0., 0.5);
                     let sphere_material = Metal::new(albedo, fuzz);
-                    world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                    objects.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
                 } else {
                     // glass
                     let sphere_material = Dielectric::new(1.5);
-                    world.add(Arc::new(Sphere::new(center, 0.2, sphere_material)));
+                    objects.add(Box::new(Sphere::new(center, 0.2, sphere_material)));
                 }
             }
         }
     }
 
-    let material1 = Dielectric::new(1.5);
-    world.add(Arc::new(Sphere::new(
-        Point3::new(0., 1., 0.),
-        1.,
-        material1,
+    // let material1 = Dielectric::new(1.5);
+    // objects.add(Box::new(Sphere::new(
+    //     Point3::new(0., 1., 0.),
+    //     1.,
+    //     material1,
+    // )));
+
+    // let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
+    // objects.add(Box::new(Sphere::new(
+    //     Point3::new(-4., 1., 0.),
+    //     1.,
+    //     material2,
+    // )));
+
+    // let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.);
+    // objects.add(Box::new(Sphere::new(
+    //     Point3::new(4., 1., 0.),
+    //     1.,
+    //     material3,
+    // )));
+
+    let mut world = HittableList::new();
+    // world.add(Box::new(BvhNode::new(objects, time0, time1)));
+
+    // let ground_material = Lambertian::new_texture(ImageTexture::new("image/earthmap.jpg"));
+    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    // let ground_material = Lambertian::new_texture(CheckerTexture::new_color(
+    //     Color::new(0.2, 0.3, 0.1),
+    //     Color::new(0.9, 0.9, 0.9),
+    // ));
+    let radius = 1000.;
+    world.add(Box::new(Sphere::new(
+        Point3::new(0., -radius - 1., 0.),
+        radius,
+        ground_material,
     )));
 
-    let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
-    world.add(Arc::new(Sphere::new(
-        Point3::new(-4., 1., 0.),
-        1.,
-        material2,
-    )));
-
-    let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.);
-    world.add(Arc::new(Sphere::new(
-        Point3::new(4., 1., 0.),
-        1.,
-        material3,
-    )));
-
-    let mut world_with_ground = HittableList::new();
-    world_with_ground.add(Arc::new(BvhNode::new(&world, time0, time1)));
-
-    //// let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
-    let checker = CheckerTexture::new_color(Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9));
-    world_with_ground.add(Arc::new(Sphere::new(
-        Point3::new(0., -1000., 0.),
-        1000.,
-        Lambertian::new_texture(checker),
-    )));
-
-    world_with_ground
+    world
 }

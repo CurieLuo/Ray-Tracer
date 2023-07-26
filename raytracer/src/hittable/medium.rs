@@ -78,10 +78,7 @@ impl<T: Texture> Material for Isotropic<T> {
         Some(ScatterRecord::new(scattered, attenuation))
     }
     fn _scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<_ScatterRecord> {
-        let scattered = Ray::new(rec.p, random_unit_vector(), r_in.time);
-        let attenuation = self.albedo.value(rec.u, rec.v, rec.p);
-
-        Some(_ScatterRecord::new(scattered, false, attenuation, None))
-        // TODO is_specular?
+        let srec = self.scatter(r_in, rec).unwrap();
+        Some(_ScatterRecord::new(srec.scattered, srec.attenuation, None))
     }
 }

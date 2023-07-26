@@ -8,8 +8,8 @@ pub struct Onb {
 } // orthonormal basis
 
 impl Onb {
-    pub fn local3(&self, a: f64, b: f64, c: f64) -> Vec3 {
-        a * self.u + b * self.v + c * self.w
+    pub fn local3(&self, x: f64, y: f64, z: f64) -> Vec3 {
+        x * self.u + y * self.v + z * self.w
     }
     pub fn local(&self, a: Vec3) -> Vec3 {
         self.local3(a.x, a.y, a.z)

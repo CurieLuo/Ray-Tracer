@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_imports)]
 use crate::utility::*;
 use image::*;
 use perlin::*;
@@ -7,7 +8,7 @@ pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Color;
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct SolidColor {
     color_value: Color,
 }
@@ -78,11 +79,13 @@ pub struct ImageTexture {
 
 impl ImageTexture {
     pub fn new(file_name: &str) -> Self {
-        let image = image::open(file_name).expect("Failed to open image");
+        let image = image::open(file_name)
+            .unwrap_or_else(|_| panic!("{}", "Failed to open image ".to_owned() + file_name))
+            .to_rgb8();
         let width = image.width() as usize;
         let height = image.height() as usize;
         let mut data = vec![[0u8; 3]; width * height];
-        for (i, (_, _, pixel)) in image.pixels().enumerate() {
+        for (i, pixel) in image.pixels().enumerate() {
             for j in 0..3 {
                 data[i][j] = pixel[j];
             }
@@ -119,4 +122,62 @@ impl Texture for ImageTexture {
     }
 }
 
-pub type NormalTexture = ImageTexture;
+#[derive(Clone)]
+pub struct GreyImageTexture {
+    data: Arc<Vec<u8>>,
+    width: usize,
+    height: usize,
+}
+
+impl GreyImageTexture {
+    pub fn new(file_name: &str) -> Self {
+        let image = image::open(file_name)
+            .unwrap_or_else(|_| panic!("{}", "Failed to open image ".to_owned() + file_name))
+            .to_luma8();
+        let width = image.width() as usize;
+        let height = image.height() as usize;
+        let mut data = vec![0; width * height];
+        for (i, pixel) in image.pixels().enumerate() {
+            data[i] = pixel.0[0];
+        }
+        Self {
+            data: Arc::new(data),
+            width,
+            height,
+        }
+    }
+}
+
+impl Texture for GreyImageTexture {
+    fn value(&self, mut u: f64, mut v: f64, _p: Vec3) -> Color {
+        // Clamp input texture coordinates to [0,1] x [1,0]
+        u = clamp(u, 0., 1.);
+        v = 1. - clamp(v, 0., 1.);
+        // Flip V to image coordinates
+        let mut i = (u * self.width as f64) as usize;
+        let mut j = (v * self.height as f64) as usize;
+        // Clamp integer mapping, since actual coordinates should be less than 1.
+        if i >= self.width {
+            i = self.width - 1;
+        }
+        if j >= self.height {
+            j = self.height - 1;
+        }
+        let index = j * self.width + i;
+        Color::new(self.data[index] as f64 / 255., 0., 0.)
+    }
+}
+
+#[derive(Clone)]
+pub enum MappingTexture<T: Texture> {
+    Color(Color),
+    Texture(T),
+}
+impl<T: Texture> Texture for MappingTexture<T> {
+    fn value(&self, u: f64, v: f64, p: Vec3) -> Color {
+        match self {
+            Self::Color(color) => *color,
+            Self::Texture(texture) => texture.value(u, v, p),
+        }
+    }
+}

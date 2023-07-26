@@ -1,0 +1,6 @@
+newmtl material1
+map_Kd textures/Sci-Fi-Floor-Diffuse.tga
+#map_Ks textures/Sci-Fi-Floor-Specular.tga
+map_Ke textures/Sci-Fi-Floor-Emissive.tga
+map_Bump textures/Sci-Fi-Floor-Normal.tga
+#map_Ns textures/Sci-Fi-Floor-Gloss.tga

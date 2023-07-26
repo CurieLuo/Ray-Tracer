@@ -1,6 +1,8 @@
+#![allow(dead_code, unused, clippy::eq_op)]
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::{MultiProgress, ProgressBar};
+use rand::prelude::SliceRandom;
 use std::{
     fs::File,
     process::exit,
@@ -31,18 +33,17 @@ mod utility;
 
 fn _ray_color(
     r: &Ray,
-    background: &Arc<dyn Texture>,
+    background: &dyn Texture,
     world: &HittableList,
     lights: &HittableList,
     depth: i32,
 ) -> Color {
     if depth <= 0 {
-        return Color::new(0., 0., 0.);
+        return Color::default();
     }
     if let Some(rec) = world.hit(r, 0.001, INFINITY) {
-        let emitted: Vec3 = rec.mat_ptr.emitted(&rec, rec.u, rec.v, rec.p);
+        let emitted: Vec3 = rec.mat_ptr.emitted(&rec);
         if let Some(srec) = rec.mat_ptr._scatter(r, &rec) {
-            // TODO both specular and diffusive
             if let Some(pdf_ptr) = srec.pdf_ptr {
                 if lights._is_empty() {
                     let scattered = Ray::new(rec.p, pdf_ptr.generate().unit(), r.time);
@@ -55,7 +56,7 @@ fn _ray_color(
                             / pdf_val
                 } else {
                     let light_ptr = HittablePdf::_new(lights, rec.p);
-                    let mixed_pdf = MixturePdf::_new(&light_ptr, pdf_ptr.as_ref(), 0.5);
+                    let mixed_pdf = MixturePdf::_new(&light_ptr, pdf_ptr.as_ref(), 0.8);
                     let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time);
                     let pdf_val = mixed_pdf.value(scattered.direction);
 
@@ -74,30 +75,30 @@ fn _ray_color(
             emitted
         }
     } else {
-        let dir = r.direction.unit();
+        let dir = r.direction;
         background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin)
     }
 }
 
-fn ray_color(r: &Ray, background: &Arc<dyn Texture>, world: &HittableList, depth: i32) -> Color {
+fn ray_color(r: &Ray, background: &dyn Texture, world: &HittableList, depth: i32) -> Color {
     if depth <= 0 {
-        return Color::new(0., 0., 0.);
+        return Color::default();
     }
     if let Some(rec) = world.hit(r, 0.001, INFINITY) {
-        let emitted: Vec3 = rec.mat_ptr.emitted(&rec, rec.u, rec.v, rec.p);
+        let emitted: Vec3 = rec.mat_ptr.emitted(&rec);
         if let Some(srec) = rec.mat_ptr.scatter(r, &rec) {
             emitted + srec.attenuation * ray_color(&srec.scattered, background, world, depth - 1)
         } else {
             emitted
         }
     } else {
-        let dir = r.direction.unit();
+        let dir = r.direction;
         background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin)
     }
 }
 
 fn main() {
-    let path = std::path::Path::new("output/test/test3.jpg");
+    let path = std::path::Path::new("output/test/test4.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -115,63 +116,97 @@ fn main() {
     let lookat;
     let vfov;
     let mut aperture = 0.;
-    let mut background: Arc<dyn Texture> = Arc::new(SolidColor::new(Color::new(0., 0., 0.)));
+    let mut background: Box<dyn Texture> = Box::new(SolidColor::new(Color::default()));
 
     let world;
-    match 1 {
+    let lights;
+    match 2 {
         1 => {
-            world = test1();
+            (world,lights) = scene1();
             aspect_ratio = 16. / 9.;
-            width = 600;
-            samples_per_pixel = 100;
-            max_depth = 50;
-            lookfrom = Point3::new(0., 0., 1000.);
-            lookat = Point3::new(0., 0., 0.);
-            // background = Arc::new(ImageTexture::new("image/tortoise.jpg"));
-            background = Arc::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
-            vfov = 45.;
+            width = 400;
+            samples_per_pixel = 500;
+            max_depth = 50 / 5;
+            lookfrom = Point3::new(0., 0., 100.);
+            lookat = Point3::default();
+            // background = Box::new(SolidColor::new(Color::new(0.00, 0.00, 0.00)));
+            background = Box::new(ImageTexture::new("image/stars.png"));
+            aperture = 0.1;
+            vfov = 40.;
         }
-        _ => match 0 {
-            1 => {
-                world = random_scene();
-                aspect_ratio = 16. / 9.;
-                width = 400;
-                samples_per_pixel = 100;
-                // aspect_ratio = 3. / 2.;
-                // width = 1200;
-                // samples_per_pixel = 500;
-                lookfrom = Point3::new(13., 2., 3.);
-                lookat = Point3::new(0., 0., 0.);
-                background = Arc::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
-                aperture = 0.1;
-                vfov = 20.;
-            }
-            2 => {
-                world = cornell_box();
-                width = 600;
-                samples_per_pixel = 200;
-                lookfrom = Point3::new(278., 278., -800.);
-                lookat = Point3::new(278., 278., 0.);
-                vfov = 40.;
-            }
-            3 => {
-                world = simple_light();
-                width = 400;
-                samples_per_pixel = 400;
-                lookfrom = Point3::new(26., 3., 6.);
-                lookat = Point3::new(0., 2., 0.);
-                vfov = 20.;
-            }
-            _ => {
-                world = final_scene();
-                width = 800;
-                samples_per_pixel = 100;
-                max_depth = 50;
-                lookfrom = Point3::new(478., 278., -600.);
-                lookat = Point3::new(278., 278., 0.);
-                vfov = 40.;
-            }
-        },
+        2 => {
+            (world,lights) = scene2();
+            aspect_ratio = 16. / 9.;
+            width = 800 / 4;
+            samples_per_pixel = 1000 / 5;
+            max_depth = 50 / 5;
+            lookfrom = Point3::new(0., 0., 10.);
+            lookat = Point3::default();
+            // background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
+            background = Box::new(ImageTexture::new("image/stars.png"));
+            aperture = 0.1;
+            vfov = 40.;
+        }
+        _ => {
+            (world,lights) = test1();
+            aspect_ratio = 16. / 9.;
+            width = 600 / 2;
+            samples_per_pixel = 100 / 2;
+            max_depth = 50 / 2;
+            lookfrom = Point3::new(13., 2., 3.);
+            lookat = Point3::default();
+            background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
+            // background = Box::new(ImageTexture::new("image/stars.png"));
+            aperture = 0.1;
+            vfov = 20.;
+            
+            // lookfrom = Point3::new(0., 0., 1000.);
+            // lookat = Point3::default();
+            // background = Box::new(SolidColor::new(Color::new(1.00, 1.00, 1.00)));
+            // // background = Box::new(ImageTexture::new("image/milky_way.png"));
+            // vfov = 45.;
+        }
+    //     _ => match 1 {
+    //         1 => {
+    //             world = random_scene();
+    //             aspect_ratio = 16. / 9.;
+    //             width = 400;
+    //             samples_per_pixel = 100;
+    //             // aspect_ratio = 3. / 2.;
+    //             // width = 1200;
+    //             // samples_per_pixel = 500;
+    //             lookfrom = Point3::new(13., 2., 3.);
+    //             lookat = Point3::default();
+    //             background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
+    //             aperture = 0.1;
+    //             vfov = 20.;
+    //         }
+    //         2 => {
+    //             world = cornell_box();
+    //             width = 600;
+    //             samples_per_pixel = 200;
+    //             lookfrom = Point3::new(278., 278., -800.);
+    //             lookat = Point3::new(278., 278., 0.);
+    //             vfov = 40.;
+    //         }
+    //         3 => {
+    //             world = simple_light();
+    //             width = 400;
+    //             samples_per_pixel = 400;
+    //             lookfrom = Point3::new(26., 3., 6.);
+    //             lookat = Point3::new(0., 2., 0.);
+    //             vfov = 20.;
+    //         }
+    //         _ => {
+    //             world = final_scene();
+    //             width = 800;
+    //             samples_per_pixel = 100;
+    //             max_depth = 50;
+    //             lookfrom = Point3::new(478., 278., -600.);
+    //             lookat = Point3::new(278., 278., 0.);
+    //             vfov = 40.;
+    //         }
+    //     },
     }
 
     let height: u32 = (width as f64 / aspect_ratio) as u32;
@@ -193,7 +228,7 @@ fn main() {
 
     // Render
     const THREAD_NUM: usize = 14;
-    const BATCH_SIZE: u32 = 64; // optimize progress bar
+    const BATCH_SIZE: u32 = 4; // optimize progress bar
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
     let mut receiver_list = Vec::new();
@@ -204,12 +239,21 @@ fn main() {
             k = (k + 1) % THREAD_NUM;
         }
     }
+    for task in task_list.iter_mut(){
+        task.shuffle(&mut rand::thread_rng());
+    }
+
+    let world = Arc::new(world);
+    let lights = Arc::new(lights);
+    let background = Arc::from(background);
 
     for task in task_list {
         let (tx, rx) = mpsc::channel();
         receiver_list.push(rx);
         let world_ = world.clone();
-        let background_ = background.clone();
+        let lights_ = lights.clone();
+        // let background_ = background.clone();
+        let background_: Arc<dyn Texture> = Arc::clone(&background);
         let progress_bar = multi_progress.add(ProgressBar::new(
             (width * height / THREAD_NUM as u32 / BATCH_SIZE) as u64,
         ));
@@ -222,7 +266,15 @@ fn main() {
                     let u = ((i as f64) + random()) / ((width - 1) as f64);
                     let v = ((j as f64) + random()) / ((height - 1) as f64);
                     let ray = cam.get_ray(u, v, time0, time1);
-                    pixel_color += ray_color(&ray, &background_, &world_, max_depth);
+                    let mut color = _ray_color(&ray, background_.as_ref(), world_.as_ref(),lights_.as_ref(), max_depth);
+                    for _i in 0..3 {
+                        if color[_i] != color[_i] {
+                            color[_i]=0.;
+                        }
+                    }
+                    // TODO eliminate NaN, not just catch it
+                    pixel_color += color;
+                    // TODO pdf for generic material
                 }
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {

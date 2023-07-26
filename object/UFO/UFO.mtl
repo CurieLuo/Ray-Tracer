@@ -1,0 +1,6 @@
+newmtl UFO
+map_Kd textures/ufo textured_diffuse.jpg
+map_Ke textures/ufo textured_emissive.png
+map_Bump textures/ufo textured_normal.jpg
+map_Ns textures/ufo textured_roughness.jpg
+map_Ks textures/ufo textured_metalness.jpg

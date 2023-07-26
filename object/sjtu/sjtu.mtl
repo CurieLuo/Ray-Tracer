@@ -1,0 +1,8 @@
+#Author: Curie Luo
+#Powered by: cpetry.github.io/NormalMap-Online
+newmtl sjtu
+map_Ks SpecularMap.png
+map_Bump NormalMap.png
+map_Kd sjtu.png
+#Ns 500
+map_Ns SpecularMap.png

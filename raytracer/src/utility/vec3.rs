@@ -1,4 +1,5 @@
-#![allow(dead_code)]
+#![allow(dead_code, unused_imports)]
+use ndarray::{array, Array2};
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign,
 };
@@ -89,7 +90,7 @@ pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
     let cos_theta = (-dot(uv, n)).min(1.);
     let r_out_perp = etai_over_etat * (uv + cos_theta * n);
     let r_out_parallel = -((1. - r_out_perp.length_squared()).abs().sqrt()) * n;
-    r_out_perp + r_out_parallel
+    (r_out_perp + r_out_parallel).unit()
 }
 
 pub fn random_in_unit_sphere() -> Vec3 {
@@ -246,4 +247,14 @@ impl IndexMut<usize> for Vec3 {
             _ => &mut self.z,
         }
     }
+}
+
+impl Mul<Vec3> for Array2<f64> {
+    type Output = Vec3;
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3::from_array(&self.dot(&array![rhs[0], rhs[1], rhs[2]]))
+    }
+}
+pub fn matmul(lhs: &Array2<f64>, rhs: Vec3) -> Vec3 {
+    Vec3::from_array(&lhs.dot(&array![rhs[0], rhs[1], rhs[2]]))
 }

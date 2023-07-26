@@ -1,4 +1,6 @@
+#![allow(dead_code)]
 use crate::hittable::*;
+use ndarray::{array, Array2};
 
 #[derive(Clone, Copy)]
 pub struct FlipFace<H: Hittable> {
@@ -312,4 +314,35 @@ impl<H: Hittable> Hittable for RotateZ<H> {
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
         self.bbox
     }
+}
+
+pub fn rot_x(angle: f64) -> Array2<f64> {
+    let theta = angle.to_radians();
+    let (cosine, sine) = (theta.cos(), theta.sin());
+    let mut mat = Array2::<f64>::eye(3);
+    mat[(1, 1)] = cosine;
+    mat[(2, 2)] = cosine;
+    mat[(1, 2)] = -sine;
+    mat[(2, 1)] = sine;
+    mat
+}
+pub fn rot_y(angle: f64) -> Array2<f64> {
+    let theta = angle.to_radians();
+    let (cosine, sine) = (theta.cos(), theta.sin());
+    let mut mat = Array2::<f64>::eye(3);
+    mat[(2, 2)] = cosine;
+    mat[(0, 0)] = cosine;
+    mat[(2, 0)] = -sine;
+    mat[(0, 2)] = sine;
+    mat
+}
+pub fn rot_z(angle: f64) -> Array2<f64> {
+    let theta = angle.to_radians();
+    let (cosine, sine) = (theta.cos(), theta.sin());
+    let mut mat = Array2::<f64>::eye(3);
+    mat[(0, 0)] = cosine;
+    mat[(1, 1)] = cosine;
+    mat[(0, 1)] = -sine;
+    mat[(1, 0)] = sine;
+    mat
 }

@@ -9,6 +9,7 @@ pub struct Ray {
 
 impl Ray {
     pub fn new(origin: Point3, direction: Vec3, time: f64) -> Self {
+        // let direction = direction.unit();
         Ray {
             origin,
             direction,

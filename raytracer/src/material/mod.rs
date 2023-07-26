@@ -1,21 +1,14 @@
 use crate::{hittable::HitRecord, pdf::*, texture::*, utility::*};
-
+pub mod generic;
 pub struct _ScatterRecord {
     pub scattered: Ray,
-    pub is_specular: bool,
     pub attenuation: Color,
     pub pdf_ptr: Option<Box<dyn Pdf>>,
 }
 impl _ScatterRecord {
-    pub fn new(
-        scattered: Ray,
-        is_specular: bool,
-        attenuation: Color,
-        pdf_ptr: Option<Box<dyn Pdf>>,
-    ) -> Self {
+    pub fn new(scattered: Ray, attenuation: Color, pdf_ptr: Option<Box<dyn Pdf>>) -> Self {
         Self {
             scattered,
-            is_specular,
             attenuation,
             pdf_ptr,
         }
@@ -45,8 +38,8 @@ pub trait Material: Send + Sync {
     fn _scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
         0.
     }
-    fn emitted(&self, _rec: &HitRecord, _u: f64, _v: f64, _p: Point3) -> Color {
-        Color::new(0., 0., 0.)
+    fn emitted(&self, _rec: &HitRecord) -> Color {
+        Color::default()
     }
 }
 
@@ -83,13 +76,12 @@ impl<T: Texture> Material for Lambertian<T> {
 
         Some(_ScatterRecord::new(
             Ray::default(),
-            false,
             attenuation,
             Some(pdf_ptr),
         ))
     }
     fn _scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
-        let cosine = dot(rec.normal, scattered.direction.unit());
+        let cosine = dot(rec.normal, scattered.direction);
         cosine.max(0.) / PI
     }
 }
@@ -111,11 +103,11 @@ impl DiffuseLight<SolidColor> {
 }
 
 impl<T: Texture> Material for DiffuseLight<T> {
-    fn emitted(&self, rec: &HitRecord, u: f64, v: f64, p: Point3) -> Color {
+    fn emitted(&self, rec: &HitRecord) -> Color {
         if rec.front_face {
-            self.emit.value(u, v, p)
+            self.emit.value(rec.u, rec.v, rec.p)
         } else {
-            Color::new(0., 0., 0.)
+            Color::default()
         }
     }
 }
@@ -135,24 +127,18 @@ impl Metal {
 }
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
-        let reflected = reflect(r_in.direction.unit(), rec.normal);
+        let reflected = reflect(r_in.direction, rec.normal);
         let scattered = Ray::new(
             rec.p,
-            reflected + self.fuzz * random_in_unit_sphere(),
+            (reflected + self.fuzz * random_in_unit_sphere()).unit(),
             r_in.time,
         );
 
         Some(ScatterRecord::new(scattered, self.albedo))
     }
     fn _scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<_ScatterRecord> {
-        let reflected = reflect(r_in.direction.unit(), rec.normal);
-        let scattered = Ray::new(
-            rec.p,
-            reflected + self.fuzz * random_in_unit_sphere(),
-            r_in.time,
-        );
-
-        Some(_ScatterRecord::new(scattered, true, self.albedo, None))
+        let srec = self.scatter(r_in, rec).unwrap();
+        Some(_ScatterRecord::new(srec.scattered, srec.attenuation, None))
     }
 }
 
@@ -177,41 +163,20 @@ impl Material for Dielectric {
         } else {
             self.ir
         };
-        let unit_direction = r_in.direction.unit();
-        let cos_theta = dot(-unit_direction, rec.normal).min(1.);
+        let cos_theta = dot(-r_in.direction, rec.normal).min(1.);
         let sin_theta = (1. - cos_theta * cos_theta).sqrt();
         let cannot_refract = refraction_ratio * sin_theta > 1.;
-        let direction =
+        let scatter_direction =
             if cannot_refract || Self::reflectance(cos_theta, refraction_ratio) > random() {
-                reflect(unit_direction, rec.normal)
+                reflect(r_in.direction, rec.normal)
             } else {
-                refract(unit_direction, rec.normal, refraction_ratio)
+                refract(r_in.direction, rec.normal, refraction_ratio)
             };
-        let scattered = Ray::new(rec.p, direction, r_in.time);
+        let scattered = Ray::new(rec.p, scatter_direction, r_in.time);
         Some(ScatterRecord::new(scattered, Color::new(1., 1., 1.)))
     }
     fn _scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<_ScatterRecord> {
-        let refraction_ratio = if rec.front_face {
-            1. / self.ir
-        } else {
-            self.ir
-        };
-        let unit_direction = r_in.direction.unit();
-        let cos_theta = dot(-unit_direction, rec.normal).min(1.);
-        let sin_theta = (1. - cos_theta * cos_theta).sqrt();
-        let cannot_refract = refraction_ratio * sin_theta > 1.;
-        let direction =
-            if cannot_refract || Self::reflectance(cos_theta, refraction_ratio) > random() {
-                reflect(unit_direction, rec.normal)
-            } else {
-                refract(unit_direction, rec.normal, refraction_ratio)
-            };
-        let scattered = Ray::new(rec.p, direction, r_in.time);
-        Some(_ScatterRecord::new(
-            scattered,
-            true,
-            Color::new(1., 1., 1.),
-            None,
-        ))
+        let srec = self.scatter(r_in, rec).unwrap();
+        Some(_ScatterRecord::new(srec.scattered, srec.attenuation, None))
     }
 }

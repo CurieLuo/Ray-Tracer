@@ -1,8 +1,8 @@
 use crate::hittable::*;
 
-#[derive(Clone)]
+// #[derive(Clone)]
 pub struct HittableList {
-    pub objects: Vec<Arc<dyn Hittable>>,
+    pub objects: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -11,11 +11,14 @@ impl HittableList {
             objects: Vec::new(),
         }
     }
-    pub fn add(&mut self, object: Arc<dyn Hittable>) {
+    pub fn add(&mut self, object: Box<dyn Hittable>) {
         self.objects.push(object);
     }
     pub fn _is_empty(&self) -> bool {
         self.objects.is_empty()
+    }
+    pub fn len(&self) -> usize {
+        self.objects.len()
     }
 }
 
