@@ -1,6 +1,0 @@
-newmtl COC_iOS_HER_TST_VII_B
-
-map_Kd textures/Iron_Man_Diffuse.png
-map_Ks textures/Iron_Man_Specular.png
-map_Ke textures/Iron_Man_Emissive.png
-map_Bump textures/Iron_Man_Normal.png

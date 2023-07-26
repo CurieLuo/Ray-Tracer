@@ -1,4 +1,0 @@
-newmtl Material.004
-map_Kd textures/baseColor.png
-map_Ns textures/roughness.png
-map_Bump textures/normal.png

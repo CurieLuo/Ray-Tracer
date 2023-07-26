@@ -64,16 +64,16 @@ pub fn scene2() -> (HittableList, HittableList) {
     let mut world = HittableList::new();
     let mut lights = HittableList::new();
 
-    // let light = Box::new(Sphere::new(
-    //     Point3::new(-10., 5., 15.),
-    //     5.,
-    //     DiffuseLight::new_color(Color::new(1., 1., 1.) * 4.),
-    // ));
     let light = Box::new(Sphere::new(
-        Point3::new(-20., 10., 30.),
-        2.,
-        DiffuseLight::new_color(Color::new(1., 1., 1.) * 150.),
+        Point3::new(-10., 5., 15.),
+        5.,
+        DiffuseLight::new_color(Color::new(1., 1., 1.) * 4.),
     ));
+    // let light = Box::new(Sphere::new(
+    //     Point3::new(-20., 10., 30.),
+    //     2.,
+    //     DiffuseLight::new_color(Color::new(1., 1., 1.) * 150.),
+    // ));
     lights.add(light.clone());
     world.add(light);
 
