@@ -31,12 +31,15 @@ mod scene_obj;
 mod texture;
 mod utility;
 
+const MAX_DEPTH: i32 = 50 / 5;
+
 fn _ray_color(
     r: &Ray,
     background: &dyn Texture,
     world: &HittableList,
     lights: &HittableList,
     depth: i32,
+    (u, v): (f64, f64),
 ) -> Color {
     if depth <= 0 {
         return Color::default();
@@ -52,7 +55,7 @@ fn _ray_color(
                     emitted
                         + srec.attenuation
                             * rec.mat_ptr._scattering_pdf(r, &rec, &scattered)
-                            * _ray_color(&scattered, background, world, lights, depth - 1)
+                            * _ray_color(&scattered, background, world, lights, depth - 1, (u, v))
                             / pdf_val
                 } else {
                     let light_ptr = HittablePdf::_new(lights, rec.p);
@@ -63,34 +66,53 @@ fn _ray_color(
                     emitted
                         + srec.attenuation
                             * rec.mat_ptr._scattering_pdf(r, &rec, &scattered)
-                            * _ray_color(&scattered, background, world, lights, depth - 1)
+                            * _ray_color(&scattered, background, world, lights, depth - 1, (u, v))
                             / pdf_val
                 }
             } else {
                 emitted
                     + srec.attenuation
-                        * _ray_color(&srec.scattered, background, world, lights, depth - 1)
+                        * _ray_color(
+                            &srec.scattered,
+                            background,
+                            world,
+                            lights,
+                            depth - 1,
+                            (u, v),
+                        )
             }
         } else {
             emitted
         }
+    } else if depth == MAX_DEPTH {
+        background.value(u, v, r.origin)
     } else {
         let dir = r.direction;
         background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin)
     }
 }
 
-fn ray_color(r: &Ray, background: &dyn Texture, world: &HittableList, depth: i32) -> Color {
+fn ray_color(
+    r: &Ray,
+    background: &dyn Texture,
+    world: &HittableList,
+    depth: i32,
+    (u, v): (f64, f64),
+) -> Color {
     if depth <= 0 {
         return Color::default();
     }
     if let Some(rec) = world.hit(r, 0.001, INFINITY) {
         let emitted: Vec3 = rec.mat_ptr.emitted(&rec);
         if let Some(srec) = rec.mat_ptr.scatter(r, &rec) {
-            emitted + srec.attenuation * ray_color(&srec.scattered, background, world, depth - 1)
+            emitted
+                + srec.attenuation
+                    * ray_color(&srec.scattered, background, world, depth - 1, (u, v))
         } else {
             emitted
         }
+    } else if depth == MAX_DEPTH {
+        background.value(u, v, r.origin)
     } else {
         let dir = r.direction;
         background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin)
@@ -106,7 +128,7 @@ fn main() {
     let mut aspect_ratio: f64 = 1.;
     let width: u32;
     let samples_per_pixel: i32;
-    let mut max_depth: i32 = 50;
+    let max_depth: i32 = MAX_DEPTH;
     let time0 = 0.;
     let time1 = 1.;
     let quality: u8 = 100;
@@ -120,13 +142,12 @@ fn main() {
 
     let world;
     let lights;
-    match 0 {
+    match 2 {
         1 => {
             (world, lights) = scene1();
             aspect_ratio = 16. / 9.;
             width = 400;
             samples_per_pixel = 500;
-            max_depth = 50 / 5;
             lookfrom = Point3::new(0., 0., 100.);
             lookat = Point3::default();
             // background = Box::new(SolidColor::new(Color::new(0.00, 0.00, 0.00)));
@@ -139,11 +160,10 @@ fn main() {
             aspect_ratio = 16. / 9.;
             width = 1600 / 5;
             samples_per_pixel = 1000 / 10;
-            max_depth = 50 / 5;
             lookfrom = Point3::new(0., 0., 10.);
             lookat = Point3::default();
             // background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
-            background = Box::new(ImageTexture::new("image/stars.png"));
+            background = Box::new(ImageTexture::new("image/milky-way-starry-sky.jpg"));
             aperture = 0.1;
             vfov = 40.;
         }
@@ -152,7 +172,6 @@ fn main() {
             aspect_ratio = 16. / 9.;
             width = 600 / 2;
             samples_per_pixel = 100 / 2;
-            max_depth = 50 / 2;
             lookfrom = Point3::new(13., 2., 3.);
             lookat = Point3::default();
             background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
@@ -202,7 +221,6 @@ fn main() {
                     world = final_scene();
                     width = 800;
                     samples_per_pixel = 100;
-                    max_depth = 50;
                     lookfrom = Point3::new(478., 278., -600.);
                     lookat = Point3::new(278., 278., 0.);
                     vfov = 40.;
@@ -281,6 +299,7 @@ fn main() {
                         world_.as_ref(),
                         lights_.as_ref(),
                         max_depth,
+                        (u, v),
                     );
                     for _i in 0..3 {
                         if color[_i] != color[_i] {
