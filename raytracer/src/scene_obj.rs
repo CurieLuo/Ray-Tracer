@@ -139,7 +139,7 @@ pub fn scene2() -> (HittableList, HittableList) {
     ));
 
     world.add(object("astronaut", 0.7, 0., 70., 0., [-7.5, -2.8, -6.]));
-    world.add(object("TimeBomb", 0.4, 0., 10., -120., [-5., -2.1, -2.]));
+    world.add(object("TimeBomb", 0.4, 0., 10., -120., [-5., -2., -2.]));
 
     world.add(Box::new(Sphere::new(
         Point3::new(0., 11., -30.),

@@ -2,7 +2,7 @@
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use rand::prelude::SliceRandom;
+use rand::{prelude::SliceRandom, thread_rng};
 use std::{
     fs::File,
     process::exit,
@@ -120,7 +120,7 @@ fn main() {
 
     let world;
     let lights;
-    match 2 {
+    match 0 {
         1 => {
             (world, lights) = scene1();
             aspect_ratio = 16. / 9.;
@@ -234,15 +234,17 @@ fn main() {
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
     let mut receiver_list = Vec::new();
-    let mut k = 0;
-    for j in 0..height {
-        for i in 0..width {
-            task_list[k].push((i, j));
-            k = (k + 1) % THREAD_NUM;
+    let mut pixel_list = Vec::new();
+    for i in 0..width {
+        for j in 0..height {
+            pixel_list.push((i, j));
         }
     }
-    for task in task_list.iter_mut() {
-        task.shuffle(&mut rand::thread_rng());
+    pixel_list.shuffle(&mut thread_rng());
+    let mut k = 0;
+    for pixel in pixel_list {
+        task_list[k].push(pixel);
+        k = (k + 1) % THREAD_NUM;
     }
 
     let world = Arc::new(world);
@@ -287,7 +289,6 @@ fn main() {
                     }
                     // TODO eliminate NaN, not just catch it
                     pixel_color += color;
-                    // TODO pdf for generic material
                 }
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {
