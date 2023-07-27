@@ -4,5 +4,6 @@ newmtl sjtu
 map_Ks SpecularMap.png
 map_Bump NormalMap.png
 map_Kd sjtu.jpg
-Ns 800
-map_Ns SpecularMap.png
+#map_Ke sjtu_bright.png
+#Ns 800
+Ns 0
