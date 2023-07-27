@@ -159,7 +159,6 @@ fn main() {
             // background = Box::new(ImageTexture::new("image/stars.png"));
             aperture = 0.1;
             vfov = 20.;
-            
             // lookfrom = Point3::new(0., 0., 1000.);
             // lookat = Point3::default();
             // background = Box::new(SolidColor::new(Color::new(1.00, 1.00, 1.00)));
@@ -239,7 +238,7 @@ fn main() {
             k = (k + 1) % THREAD_NUM;
         }
     }
-    for task in task_list.iter_mut(){
+    for task in task_list.iter_mut() {
         task.shuffle(&mut rand::thread_rng());
     }
 
@@ -266,10 +265,16 @@ fn main() {
                     let u = ((i as f64) + random()) / ((width - 1) as f64);
                     let v = ((j as f64) + random()) / ((height - 1) as f64);
                     let ray = cam.get_ray(u, v, time0, time1);
-                    let mut color = _ray_color(&ray, background_.as_ref(), world_.as_ref(),lights_.as_ref(), max_depth);
+                    let mut color = _ray_color(
+                        &ray,
+                        background_.as_ref(),
+                        world_.as_ref(),
+                        lights_.as_ref(),
+                        max_depth,
+                    );
                     for _i in 0..3 {
                         if color[_i] != color[_i] {
-                            color[_i]=0.;
+                            color[_i] = 0.;
                         }
                     }
                     // TODO eliminate NaN, not just catch it
