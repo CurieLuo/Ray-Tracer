@@ -1,7 +1,7 @@
 #![allow(dead_code, unused, clippy::eq_op)]
 use console::style;
 use image::{ImageBuffer, RgbImage};
-use indicatif::{MultiProgress, ProgressBar};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rand::prelude::SliceRandom;
 use std::{
     fs::File,
@@ -98,7 +98,7 @@ fn ray_color(r: &Ray, background: &dyn Texture, world: &HittableList, depth: i32
 }
 
 fn main() {
-    let path = std::path::Path::new("output/test/test4.jpg");
+    let path = std::path::Path::new("output/test/test5.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all parent directories");
 
@@ -122,7 +122,7 @@ fn main() {
     let lights;
     match 2 {
         1 => {
-            (world,lights) = scene1();
+            (world, lights) = scene1();
             aspect_ratio = 16. / 9.;
             width = 400;
             samples_per_pixel = 500;
@@ -135,10 +135,10 @@ fn main() {
             vfov = 40.;
         }
         2 => {
-            (world,lights) = scene2();
+            (world, lights) = scene2();
             aspect_ratio = 16. / 9.;
-            width = 800 / 4;
-            samples_per_pixel = 1000 / 5;
+            width = 1600 / 5;
+            samples_per_pixel = 1000 / 10;
             max_depth = 50 / 5;
             lookfrom = Point3::new(0., 0., 10.);
             lookat = Point3::default();
@@ -147,8 +147,8 @@ fn main() {
             aperture = 0.1;
             vfov = 40.;
         }
-        _ => {
-            (world,lights) = test1();
+        3 => {
+            (world, lights) = test1();
             aspect_ratio = 16. / 9.;
             width = 600 / 2;
             samples_per_pixel = 100 / 2;
@@ -165,47 +165,50 @@ fn main() {
             // // background = Box::new(ImageTexture::new("image/milky_way.png"));
             // vfov = 45.;
         }
-    //     _ => match 1 {
-    //         1 => {
-    //             world = random_scene();
-    //             aspect_ratio = 16. / 9.;
-    //             width = 400;
-    //             samples_per_pixel = 100;
-    //             // aspect_ratio = 3. / 2.;
-    //             // width = 1200;
-    //             // samples_per_pixel = 500;
-    //             lookfrom = Point3::new(13., 2., 3.);
-    //             lookat = Point3::default();
-    //             background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
-    //             aperture = 0.1;
-    //             vfov = 20.;
-    //         }
-    //         2 => {
-    //             world = cornell_box();
-    //             width = 600;
-    //             samples_per_pixel = 200;
-    //             lookfrom = Point3::new(278., 278., -800.);
-    //             lookat = Point3::new(278., 278., 0.);
-    //             vfov = 40.;
-    //         }
-    //         3 => {
-    //             world = simple_light();
-    //             width = 400;
-    //             samples_per_pixel = 400;
-    //             lookfrom = Point3::new(26., 3., 6.);
-    //             lookat = Point3::new(0., 2., 0.);
-    //             vfov = 20.;
-    //         }
-    //         _ => {
-    //             world = final_scene();
-    //             width = 800;
-    //             samples_per_pixel = 100;
-    //             max_depth = 50;
-    //             lookfrom = Point3::new(478., 278., -600.);
-    //             lookat = Point3::new(278., 278., 0.);
-    //             vfov = 40.;
-    //         }
-    //     },
+        _ => {
+            lights = HittableList::new();
+            match 1 {
+                1 => {
+                    world = random_scene();
+                    // aspect_ratio = 16. / 9.;
+                    // width = 400;
+                    // samples_per_pixel = 100;
+                    aspect_ratio = 3. / 2.;
+                    width = 1200;
+                    samples_per_pixel = 500;
+                    lookfrom = Point3::new(13., 2., 3.);
+                    lookat = Point3::default();
+                    background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
+                    aperture = 0.1;
+                    vfov = 20.;
+                }
+                2 => {
+                    world = cornell_box();
+                    width = 600;
+                    samples_per_pixel = 200;
+                    lookfrom = Point3::new(278., 278., -800.);
+                    lookat = Point3::new(278., 278., 0.);
+                    vfov = 40.;
+                }
+                3 => {
+                    world = simple_light();
+                    width = 400;
+                    samples_per_pixel = 400;
+                    lookfrom = Point3::new(26., 3., 6.);
+                    lookat = Point3::new(0., 2., 0.);
+                    vfov = 20.;
+                }
+                _ => {
+                    world = final_scene();
+                    width = 800;
+                    samples_per_pixel = 100;
+                    max_depth = 50;
+                    lookfrom = Point3::new(478., 278., -600.);
+                    lookat = Point3::new(278., 278., 0.);
+                    vfov = 40.;
+                }
+            }
+        }
     }
 
     let height: u32 = (width as f64 / aspect_ratio) as u32;
@@ -256,6 +259,11 @@ fn main() {
         let progress_bar = multi_progress.add(ProgressBar::new(
             (width * height / THREAD_NUM as u32 / BATCH_SIZE) as u64,
         ));
+        progress_bar.set_style(
+            ProgressStyle::default_bar()
+                .template(" [{elapsed_precise}] [{wide_bar:.cyan/blue}] [{pos}/{len}] ({eta})")
+                .progress_chars("#>-"),
+        );
         let handle = thread::spawn(move || {
             let mut result = Vec::new();
             let mut progress_count = 0;

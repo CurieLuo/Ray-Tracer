@@ -102,7 +102,7 @@ pub fn scene2() -> (HittableList, HittableList) {
         90.,
         -150.,
         0.,
-        [1.5 - 0.07, -1.5, 0.2],
+        [1.5 - 0.1, -1.5, 0.2],
     ));
     droid_and_sword.add(object("droid", 0.8, 0., 0., 0., [0., -2.8, 0.]));
     world.add(Box::new(RotateY::new(droid_and_sword, -15.)));
@@ -159,7 +159,7 @@ pub fn object(
     pos: [f64; 3],
 ) -> Box<dyn Hittable> {
     Box::new(load_obj_and_mtl(
-        ("object/".to_owned() + name + "/").as_str(),
+        format!("object/{}/", name).as_str(),
         (name.to_owned() + ".obj").as_str(),
         scale,
         rot_x(rotx).dot(&rot_y(roty)).dot(&rot_z(rotz)),

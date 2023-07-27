@@ -186,8 +186,8 @@ pub fn random_scene() -> HittableList {
     let time0 = 0.;
     let time1 = 1.;
     let mut objects = HittableList::new();
-    for a in (-11..11).step_by(3) {
-        for b in (-11..11).step_by(3) {
+    for a in (-11..11) {
+        for b in (-11..11) {
             let choose_mat = random();
             let center = Point3::new(
                 (a as f64) + 0.9 * random(),
@@ -223,39 +223,38 @@ pub fn random_scene() -> HittableList {
         }
     }
 
-    // let material1 = Dielectric::new(1.5);
-    // objects.add(Box::new(Sphere::new(
-    //     Point3::new(0., 1., 0.),
-    //     1.,
-    //     material1,
-    // )));
+    let material1 = Dielectric::new(1.5);
+    objects.add(Box::new(Sphere::new(
+        Point3::new(0., 1., 0.),
+        1.,
+        material1,
+    )));
 
-    // let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
-    // objects.add(Box::new(Sphere::new(
-    //     Point3::new(-4., 1., 0.),
-    //     1.,
-    //     material2,
-    // )));
+    let material2 = Lambertian::new(Color::new(0.4, 0.2, 0.1));
+    objects.add(Box::new(Sphere::new(
+        Point3::new(-4., 1., 0.),
+        1.,
+        material2,
+    )));
 
-    // let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.);
-    // objects.add(Box::new(Sphere::new(
-    //     Point3::new(4., 1., 0.),
-    //     1.,
-    //     material3,
-    // )));
+    let material3 = Metal::new(Color::new(0.7, 0.6, 0.5), 0.);
+    objects.add(Box::new(Sphere::new(
+        Point3::new(4., 1., 0.),
+        1.,
+        material3,
+    )));
 
     let mut world = HittableList::new();
-    // world.add(Box::new(BvhNode::new(objects, time0, time1)));
+    world.add(Box::new(BvhNode::new(objects, time0, time1)));
 
-    // let ground_material = Lambertian::new_texture(ImageTexture::new("image/earthmap.jpg"));
-    let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
-    // let ground_material = Lambertian::new_texture(CheckerTexture::new_color(
-    //     Color::new(0.2, 0.3, 0.1),
-    //     Color::new(0.9, 0.9, 0.9),
-    // ));
+    // let ground_material = Lambertian::new(Color::new(0.5, 0.5, 0.5));
+    let ground_material = Lambertian::new_texture(CheckerTexture::new_color(
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
     let radius = 1000.;
     world.add(Box::new(Sphere::new(
-        Point3::new(0., -radius - 1., 0.),
+        Point3::new(0., -radius, 0.),
         radius,
         ground_material,
     )));
