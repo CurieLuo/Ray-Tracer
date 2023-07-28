@@ -29,3 +29,7 @@ pub fn randint(min: i32, max: i32) -> i32 {
     randrange(min as f64, max as f64) as i32
     // rand::thread_rng().gen_range(min..max)
 }
+
+pub fn eye3() -> ndarray::Array2<f64> {
+    ndarray::Array2::eye(3)
+}

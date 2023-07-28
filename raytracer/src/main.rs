@@ -1,4 +1,4 @@
-//#![allow(unused)]
+#![allow(unused, clippy::all)]
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
@@ -10,14 +10,10 @@ use std::{
     thread::{self, JoinHandle},
 };
 
-use camera::*;
-use hittable::*;
-use material::ScatterRecord;
-use my_scene::*;
-use pdf::*;
-use scene::*;
-use texture::*;
-use utility::*;
+use crate::{
+    camera::*, hittable::*, material::ScatterRecord, my_scene::*, pdf::*, scene::*, texture::*,
+    utility::*,
+};
 
 pub mod camera;
 pub mod hittable;
@@ -29,66 +25,8 @@ pub mod texture;
 pub mod utility;
 
 const MAX_DEPTH: i32 = 20;
-
-fn ray_color(
-    r: &Ray,
-    background: &dyn Texture,
-    world: &HittableList,
-    lights: &HittableList,
-    depth: i32,
-    (u, v): (f64, f64),
-) -> Color {
-    if depth <= 0 {
-        return Color::default();
-    }
-    if let Some(rec) = world.hit(r, 0.001, INFINITY) {
-        let emitted = rec.mat_ptr.emitted(r, &rec, rec.u, rec.v, &rec.p);
-        let mut srec = ScatterRecord::default();
-        if rec.mat_ptr.scatter(r, &rec, &mut srec) {
-            if let Some(pdf_ptr) = srec.pdf_ptr {
-                if lights.is_empty() {
-                    let scattered = Ray::new(&rec.p, &pdf_ptr.generate().unit(), r.time());
-                    let pdf_val = pdf_ptr.value(scattered.direction_borrow());
-
-                    emitted
-                        + srec.attenuation
-                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-                            * ray_color(&scattered, background, world, lights, depth - 1, (u, v))
-                            / pdf_val
-                } else {
-                    let light_ptr = HittablePDF::new(lights, &rec.p);
-                    let mixed_pdf = MixturePDF::new(&light_ptr, pdf_ptr.as_ref());
-                    let scattered = Ray::new(&rec.p, &mixed_pdf.generate().unit(), r.time());
-                    let pdf_val = mixed_pdf.value(scattered.direction_borrow());
-
-                    emitted
-                        + srec.attenuation
-                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
-                            * ray_color(&scattered, background, world, lights, depth - 1, (u, v))
-                            / pdf_val
-                }
-            } else {
-                emitted
-                    + srec.attenuation
-                        * ray_color(
-                            &srec.scattered,
-                            background,
-                            world,
-                            lights,
-                            depth - 1,
-                            (u, v),
-                        )
-            }
-        } else {
-            emitted
-        }
-    } else if depth == MAX_DEPTH {
-        background.value(u, v, r.origin_borrow())
-    } else {
-        let dir = r.direction_borrow().unit();
-        background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin_borrow())
-    }
-}
+const THREAD_NUM: usize = 14;
+const BATCH_SIZE: u32 = 4; // optimize progress bar
 
 fn main() {
     let path = std::path::Path::new("output/test/test5.jpg");
@@ -111,7 +49,7 @@ fn main() {
     let mut background: Box<dyn Texture> = Box::new(SolidColor::new(&Color::default()));
 
     let world;
-    let mut lights = HittableList::new();
+    let mut lights = HittableList::default();
     match 1 {
         1 => {
             (world, lights) = scifi1();
@@ -126,10 +64,10 @@ fn main() {
             vfov = 40.;
         }
         // 2 => {
-        //     (world, lights) = test1();
+        //     world = test1();
         //     aspect_ratio = 16. / 9.;
         //     width = 600 / 2;
-        //     samples_per_pixel = 100 / 2;
+        //     samples_per_pixel = 100 * 2;
         //     lookfrom = Point3::new(13., 2., 3.);
         //     lookat = Point3::default();
         //     background = Box::new(SolidColor::new(&Color::new(0.70, 0.80, 1.00)));
@@ -196,8 +134,7 @@ fn main() {
     let multi_progress = MultiProgress::new();
 
     // Render
-    const THREAD_NUM: usize = 14;
-    const BATCH_SIZE: u32 = 4; // optimize progress bar
+
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
     let mut receiver_list = Vec::new();
@@ -299,4 +236,64 @@ fn main() {
     }
 
     exit(0);
+}
+
+fn ray_color(
+    r: &Ray,
+    background: &dyn Texture,
+    world: &HittableList,
+    lights: &HittableList,
+    depth: i32,
+    (u, v): (f64, f64),
+) -> Color {
+    if depth <= 0 {
+        return Color::default();
+    }
+    if let Some(rec) = world.hit(r, 0.001, INFINITY) {
+        let emitted = rec.mat_ptr.emitted(r, &rec, rec.u, rec.v, &rec.p);
+        let mut srec = ScatterRecord::default();
+        if rec.mat_ptr.scatter(r, &rec, &mut srec) {
+            if let Some(pdf_ptr) = srec.pdf_ptr {
+                if lights.is_empty() {
+                    let scattered = Ray::new(&rec.p, &pdf_ptr.generate().unit(), r.time());
+                    let pdf_val = pdf_ptr.value(scattered.direction_borrow());
+
+                    emitted
+                        + srec.attenuation
+                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                            * ray_color(&scattered, background, world, lights, depth - 1, (u, v))
+                            / pdf_val
+                } else {
+                    let light_ptr = HittablePDF::new(lights, &rec.p);
+                    let mixed_pdf = MixturePDF::new(&light_ptr, pdf_ptr.as_ref());
+                    let scattered = Ray::new(&rec.p, &mixed_pdf.generate().unit(), r.time());
+                    let pdf_val = mixed_pdf.value(scattered.direction_borrow());
+
+                    emitted
+                        + srec.attenuation
+                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                            * ray_color(&scattered, background, world, lights, depth - 1, (u, v))
+                            / pdf_val
+                }
+            } else {
+                emitted
+                    + srec.attenuation
+                        * ray_color(
+                            &srec.scattered,
+                            background,
+                            world,
+                            lights,
+                            depth - 1,
+                            (u, v),
+                        )
+            }
+        } else {
+            emitted
+        }
+    } else if depth == MAX_DEPTH {
+        background.value(u, v, r.origin_borrow())
+    } else {
+        let dir = r.direction_borrow().unit();
+        background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin_borrow())
+    }
 }

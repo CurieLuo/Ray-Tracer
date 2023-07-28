@@ -153,7 +153,7 @@ pub fn cornell_box() -> (HittableList, HittableList) {
     objects.add(Box::new(YZRect::new(0., 555., 0., 555., 555., green)));
     objects.add(Box::new(YZRect::new(0., 555., 0., 555., 0., red)));
     //flip light
-    let mut lights = HittableList::new();
+    let mut lights = HittableList::default();
     let light1 = FlipFace::new(XZRect::new(213., 343., 227., 332., 554., light));
     lights.add(Box::new(light1.clone()));
     objects.add(Box::new(light1));
@@ -204,7 +204,7 @@ pub fn cornell_smoke() -> (HittableList, HittableList) {
     let light = DiffuseLight::new_from_color(&Color::new(7., 7., 7.));
     objects.add(Box::new(YZRect::new(0., 555., 0., 555., 555., green)));
     objects.add(Box::new(YZRect::new(0., 555., 0., 555., 0., red)));
-    let mut lights = HittableList::new();
+    let mut lights = HittableList::default();
     let light1 = FlipFace::new(XZRect::new(113., 343., 127., 432., 554., light));
     lights.add(Box::new(light1.clone()));
     objects.add(Box::new(light1));
@@ -277,7 +277,7 @@ pub fn final_scene() -> (HittableList, HittableList) {
     let mut objects = HittableList::default();
     objects.add(Box::new(BVHNode::new(boxes1, TIME0, TIME1)));
 
-    let mut lights = HittableList::new();
+    let mut lights = HittableList::default();
     let light = DiffuseLight::new_from_color(&Color::new(7., 7., 7.));
     let light1 = FlipFace::new(XZRect::new(123., 423., 147., 412., 554., light));
     lights.add(Box::new(light1.clone()));

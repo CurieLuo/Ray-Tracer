@@ -8,8 +8,71 @@ use crate::{
 use ndarray::Array2;
 
 pub fn scifi1() -> (HittableList, HittableList) {
-    let mut world = HittableList::new();
-    let mut lights = HittableList::new();
+    let mut world = HittableList::default();
+    let mut lights = HittableList::default();
+
+    let mut droid_and_sword = HittableList::default();
+    droid_and_sword.add(object(
+        "StingSword",
+        1. / 30.,
+        90.,
+        -150.,
+        0.,
+        [1.5 - 0.1, -1.5, 0.2],
+    ));
+    droid_and_sword.add(object("droid", 0.8, 0., 0., 0., [0., -2.8, 0.]));
+
+    match 2 {
+        1 => world.add(object(
+            "SciFi_Fighter",
+            1. / 200.,
+            20.,
+            30.,
+            0.,
+            [-10., 6., -15.],
+        )),
+        2 => world.add(object(
+            "Kameri_explorer",
+            1. / 25.,
+            25.,
+            -130.,
+            0.,
+            [-6., 4., -15.],
+        )),
+        _ => (),
+    };
+
+    world.add(Box::new(RotateY::new(droid_and_sword, -15.)));
+    world.add(object("Plasma_turret", 1., 0., 30., 0., [6., -2.4, -8.]));
+    world.add(object(
+        "CartoonSpaceRocket",
+        0.7,
+        0.,
+        0.,
+        0.,
+        [-6., -2.8, -8.],
+    ));
+    world.add(object("astronaut", 0.7, 0., 70., 0., [-7.5, -2.8, -6.]));
+    world.add(object("TimeBomb", 0.4, 0., 10., -120., [-5., -2., -2.]));
+    world.add(object(
+        "portal",
+        1. / 150.,
+        -95.,
+        0.,
+        -15.,
+        [-4., -3., -15.],
+    ));
+    match 1 {
+        1 => world.add(object("aircraft", 4., 18., 0., -10., [7., 2.7, -12.])),
+        2 => world.add(object("UFO", 1.5, 18., 0., -10., [7., 4., -12.])),
+        _ => (),
+    };
+
+    world.add(Box::new(Sphere::new(
+        &Point3::new(0., 11., -30.),
+        2.3,
+        Lambertian::new(ImageTexture::new("image/colorful3.jpg")),
+    )));
 
     let light = Box::new(Sphere::new(
         &Point3::new(-10., 5., 15.),
@@ -23,9 +86,8 @@ pub fn scifi1() -> (HittableList, HittableList) {
     // ));
     lights.add(light.clone());
     world.add(light);
-
-    let mut ground = HittableList::new();
-    let scale = 4.;
+    let mut ground = HittableList::default();
+    let scale = 2.;
     for i in -4..=4 {
         for j in -4..=0 {
             ground.add(object(
@@ -34,67 +96,55 @@ pub fn scifi1() -> (HittableList, HittableList) {
                 0.,
                 0.,
                 0.,
-                [i as f64 * scale, -3., j as f64 * scale],
+                [i as f64 * scale * 2., -3., j as f64 * scale * 2.],
             ));
         }
     }
-    world.add(Box::new(BVHNode::new(ground, 0., 1.)));
-
-    world.add(object("sjtu", 1.65, 0., -20., 0., [4., -2.4, 0.5]));
-
-    let mut droid_and_sword = HittableList::new();
-    droid_and_sword.add(object(
-        "StingSword",
-        1. / 30.,
-        90.,
-        -150.,
-        0.,
-        [1.5 - 0.1, -1.5, 0.2],
-    ));
-    droid_and_sword.add(object("droid", 0.8, 0., 0., 0., [0., -2.8, 0.]));
-    world.add(Box::new(RotateY::new(droid_and_sword, -15.)));
-
-    match 0 {
-        0 => world.add(object(
-            "SciFi_Fighter",
-            1. / 200.,
-            20.,
-            30.,
-            0.,
-            [-10., 6., -15.],
-        )),
-        _ => world.add(object(
-            "space_battleship_lp",
-            1. / 2.,
-            27.,
-            60.,
-            0.,
-            [-10., 4.2, -15.],
-        )),
-    };
-
-    world.add(object("UFO", 1.5, 18., 0., -10., [7., 4., -12.]));
-    world.add(object("Plasma_turret", 1., 0., 30., 0., [6., -2.4, -8.]));
-
-    world.add(object(
-        "CartoonSpaceRocket",
-        0.7,
-        0.,
-        0.,
-        0.,
-        [-6., -2.8, -8.],
-    ));
-
-    world.add(object("astronaut", 0.7, 0., 70., 0., [-7.5, -2.8, -6.]));
-    world.add(object("TimeBomb", 0.4, 0., 10., -120., [-5., -2., -2.]));
-
-    world.add(Box::new(Sphere::new(
-        &Point3::new(0., 11., -30.),
-        2.2,
-        Lambertian::new(ImageTexture::new("image/colorful3.jpg")),
-    )));
+    world.add(Box::new(BVHNode::new(ground, TIME0, TIME1)));
 
     (world, lights)
+}
+
+pub fn test1() -> HittableList {
+    let mut world = HittableList::default();
+    // world.add(Box::new(load_obj(
+    //     "object/cube.obj",
+    //     Metal::new(&Color::new(1., 0.7, 0.7), 0.),
+    //     Some("image/normal_test.png"),
+    //     1.2 / 1.,
+    //     eye3(),
+    //     Vec3::default(),
+    // )));
+    // world.add(Box::new(load(
+    //     "object/sol/sol.obj",
+    //     Lambertian::new(&Color::new(0.8, 0.8, 1.)),
+    //     Some("image/normal.jpg"),
+    //     1. / 12000.,
+    //     eye3(),
+    //     Vec3::default(),
+    // )));
+    // world.add(object("airplane", 1. / 250., -90., 0., 0., [0., 0., 0.]));
+    // world.add(object(
+    //     "TransportShuttle",
+    //     10. / 20.,
+    //     0.,
+    //     90.,
+    //     0.,
+    //     [0., 0., 0.],
+    // ));
+    // world.add(object("diamonds", 15. / 20., 0., 90., 0., [0., 0., 0.]));
+    // world.add(object("StylizedPlanets", 2., 0., 0., 0., [15., 10., -30.]));
+    // world.add(Box::new(load_obj(
+    //     "object/cat_lp.obj",
+    //     Metal::new(&Color::new(1., 0.8, 0.8), 0.),
+    //     None,
+    //     1. / 150.,
+    //     rot_y(90.),
+    //     Vec3::default(),
+    // )));
+    // world.add(object("bee_turret", 1. / 6., 0., -40., 0., [4., 0.4, 0.]));
+    // world.add(object("sjtu", 1.65, 0., -20., 0., [4., -2.4, 0.5]));
+    world
 }
 
 pub fn object(

@@ -114,6 +114,24 @@ impl Vec3 {
             }
         }
     }
+
+    pub fn gold() -> Self {
+        Self {
+            x: 1.,
+            y: 0.843,
+            z: 0.,
+        }
+    }
+    pub fn silver() -> Self {
+        Self::grayscale(0.753)
+    }
+    pub fn brass() -> Self {
+        Self {
+            x: 0.749,
+            y: 0.678,
+            z: 0.435,
+        }
+    }
 }
 
 pub fn dot(a: &Vec3, b: &Vec3) -> f64 {

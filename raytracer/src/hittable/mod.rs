@@ -67,10 +67,8 @@ pub struct HittableList {
 }
 
 impl HittableList {
-    pub fn new() -> Self {
-        HittableList {
-            objects: Vec::new(),
-        }
+    pub fn new(obj: Box<dyn Hittable>) -> Self {
+        HittableList { objects: vec![obj] }
     }
 
     pub fn add(&mut self, obj: Box<dyn Hittable>) {
@@ -139,7 +137,9 @@ impl Hittable for HittableList {
 
 impl Default for HittableList {
     fn default() -> Self {
-        Self::new()
+        Self {
+            objects: Vec::new(),
+        }
     }
 }
 

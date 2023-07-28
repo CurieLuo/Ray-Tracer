@@ -33,7 +33,7 @@ pub fn load_obj_and_mtl(
     .expect("Failed to load .obj file.");
     let materials: Vec<tobj::Material> = materials.unwrap();
     // println!("{:#?}", materials);
-    let mut objects = HittableList::new();
+    let mut objects = HittableList::default();
     for model in models {
         let mesh = &model.mesh;
         let material = &materials[mesh.material_id.unwrap()];
@@ -92,7 +92,7 @@ pub fn load_obj_and_mtl(
         let normals = &mesh.normals;
         let normal_indices = &mesh.normal_indices;
         let mut points = Vec::new();
-        let mut faces = HittableList::new();
+        let mut faces = HittableList::default();
         for pos in positions.chunks_exact(3) {
             points.push(matmul(&rot, &Point3::new(pos[0], pos[1], pos[2])) * scale + shift);
         }
@@ -140,9 +140,89 @@ pub fn load_obj_and_mtl(
         objects.add(Box::new(BVHNode::new(faces, TIME0, TIME1)));
     }
     if objects.objects.len() > 3 {
-        let mut tmp = HittableList::new();
-        tmp.add(Box::new(BVHNode::new(objects, TIME0, TIME1)));
-        return tmp;
+        return HittableList::new(Box::new(BVHNode::new(objects, TIME0, TIME1)));
+    }
+    objects
+}
+
+pub fn load_obj<M: Material + Clone + 'static>(
+    file_name: &str,
+    mat: M,
+    noral_map_name: Option<&str>,
+    scale: f64,
+    rot: Array2<f64>, // rotation
+    shift: Vec3,
+) -> HittableList {
+    let (models, _) = tobj::load_obj(
+        file_name,
+        &LoadOptions {
+            single_index: false,
+            triangulate: true,
+            ignore_points: true,
+            ignore_lines: true,
+        },
+    )
+    .expect("Failed to load .obj file.");
+    let nmap = noral_map_name.map(ImageTexture::new);
+    let mut objects = HittableList::default();
+    for model in models {
+        let mesh = &model.mesh;
+        let positions = &mesh.positions;
+        let indices = &mesh.indices;
+        let texcoords = &mesh.texcoords;
+        let texcoord_indices = &mesh.texcoord_indices;
+        let normals = &mesh.normals;
+        let normal_indices = &mesh.normal_indices;
+        let mut points = Vec::new();
+        let mut faces = HittableList::default();
+        for pos in positions.chunks_exact(3) {
+            points.push(matmul(&rot, &Point3::new(pos[0], pos[1], pos[2])) * scale + shift);
+        }
+        for i in (0..(indices.len() - 2)).step_by(3) {
+            let (idx0, idx1, idx2) = (
+                indices[i] as usize,
+                indices[i + 1] as usize,
+                indices[i + 2] as usize,
+            );
+            let mut uv = [(0., 0.), (1., 0.), (0., 1.)];
+            if !texcoords.is_empty() {
+                for j in 0..3 {
+                    let tidx = texcoord_indices[i + j] as usize;
+                    uv[j] = (texcoords[tidx * 2], texcoords[tidx * 2 + 1]);
+                }
+            }
+            let mut n = [cross(
+                &(points[idx1] - points[idx0]),
+                &(points[idx2] - points[idx0]),
+            )
+            .unit(); 3];
+            if !normals.is_empty() {
+                for j in 0..3 {
+                    let nidx = normal_indices[i + j] as usize;
+                    n[j] = matmul(
+                        &rot,
+                        &Vec3::new(
+                            normals[nidx * 3],
+                            normals[nidx * 3 + 1],
+                            normals[nidx * 3 + 2],
+                        ),
+                    );
+                }
+            }
+            faces.add(Box::new(Triangle::new(
+                (points[idx0], points[idx1], points[idx2]),
+                mat.clone(),
+                uv[0],
+                uv[1],
+                uv[2],
+                (n[0], n[1], n[2]),
+                nmap.clone(),
+            )));
+        }
+        objects.add(Box::new(BVHNode::new(faces, TIME0, TIME1)));
+    }
+    if objects.objects.len() > 3 {
+        return HittableList::new(Box::new(BVHNode::new(objects, TIME0, TIME1)));
     }
     objects
 }
