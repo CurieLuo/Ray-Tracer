@@ -10,7 +10,7 @@ pub struct Triangle<M: Material> {
     pub pc: Vec3,
     // pb / pc: perpendicular to ab / ac
     pub mat: M,
-    pub bbox: Aabb,
+    pub bbox: AABB,
     pub uva: Vec3,
     pub uvab: Vec3,
     pub uvac: Vec3,
@@ -33,7 +33,7 @@ impl<M: Material> Triangle<M> {
     ) -> Self {
         let ab = b - a;
         let ac = c - a;
-        let normal_ = cross(ab, ac);
+        let normal_ = cross(&ab, &ac);
         let n = normal_.unit();
         let det = normal_.length();
         let mut min = Point3::default();
@@ -52,10 +52,10 @@ impl<M: Material> Triangle<M> {
         Self {
             a,
             n,
-            pb: cross(n, ab) / det,
-            pc: cross(ac, n) / det,
+            pb: cross(&n, &ab) / det,
+            pc: cross(&ac, &n) / det,
             mat,
-            bbox: Aabb::new(min, max),
+            bbox: AABB::new(&min, &max),
             uva,
             uvab,
             uvac,
@@ -69,39 +69,44 @@ impl<M: Material> Triangle<M> {
 }
 impl<M: Material> Hittable for Triangle<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let t = dot(self.a - r.origin, self.n) / dot(r.direction, self.n);
+        let t = dot(&(self.a - r.origin()), &self.n) / dot(r.direction_borrow(), &self.n);
         if t < t_min || t_max < t {
             return None;
         }
         let p = r.at(t);
         let ap = p - self.a;
-        let u = dot(ap, self.pc);
-        let v = dot(ap, self.pb);
+        let u = dot(&ap, &self.pc);
+        let v = dot(&ap, &self.pb);
         // P = A + uAB + vAC
         if u >= 0. && v >= 0. && u + v <= 1. {
             let uv: Vec3 = self.uva + u * self.uvab + v * self.uvac;
-            let mut rec = HitRecord::new(t, p, &self.mat, uv.x, uv.y);
+            let mut rec = HitRecord::new(&self.mat);
+            rec.t = t;
+            rec.p = p;
+            rec.u = uv.x;
+            rec.v = uv.y;
             let mut normal = (self.na + u * self.nab + v * self.nac).unit();
             if self.nmap.is_some() {
                 let mut tangent = self.tangent;
-                tangent = (tangent - dot(tangent, normal) * normal).unit();
-                let bitangent = cross(normal, tangent).unit();
+                tangent = (tangent - dot(&tangent, &normal) * normal).unit();
+                let bitangent = cross(&normal, &tangent).unit();
                 let tbn = array![
                     [tangent[0], bitangent[0], normal[0]],
                     [tangent[1], bitangent[1], normal[1]],
                     [tangent[2], bitangent[2], normal[2]],
                 ];
                 let t_normal =
-                    self.nmap.as_ref().unwrap().value(uv.x, uv.y, p) * 2. - Vec3::new(1., 1., 1.);
+                    self.nmap.as_ref().unwrap().value(uv.x, uv.y, &p) * 2. - Vec3::new(1., 1., 1.);
                 normal = tbn * t_normal;
             }
-            rec.set_face_normal(r, normal);
+            rec.set_face_normal(r, &normal);
             Some(rec)
         } else {
             None
         }
     }
-    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
-        Some(self.bbox)
+    fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
+        *output_box = self.bbox;
+        true
     }
 }

@@ -1,6 +1,7 @@
+pub mod ray;
+pub mod vec3;
+
 pub use ray::*;
-pub use vec3::*;
-// use rand::prelude::*;
 pub use std::{
     f64::{
         consts::{PI, TAU},
@@ -8,8 +9,10 @@ pub use std::{
     },
     sync::Arc,
 };
-pub mod ray;
-pub mod vec3;
+pub use vec3::*;
+
+pub const TIME0: f64 = 0.;
+pub const TIME1: f64 = 1.;
 
 pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
     x.clamp(min, max)

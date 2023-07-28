@@ -1,11 +1,9 @@
-#![allow(dead_code, unused_imports)]
 use crate::utility::*;
-use image::*;
 use perlin::*;
 pub mod perlin;
 
 pub trait Texture: Send + Sync {
-    fn value(&self, u: f64, v: f64, p: Vec3) -> Color;
+    fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
 }
 
 #[derive(Clone, Copy, Default)]
@@ -13,12 +11,14 @@ pub struct SolidColor {
     color_value: Color,
 }
 impl SolidColor {
-    pub fn new(color_value: Color) -> Self {
-        Self { color_value }
+    pub fn new(color_value: &Color) -> Self {
+        Self {
+            color_value: *color_value,
+        }
     }
 }
 impl Texture for SolidColor {
-    fn value(&self, _u: f64, _v: f64, _p: Vec3) -> Color {
+    fn value(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
         self.color_value
     }
 }
@@ -34,12 +34,12 @@ impl<T0: Texture, T1: Texture> CheckerTexture<T0, T1> {
     }
 }
 impl CheckerTexture<SolidColor, SolidColor> {
-    pub fn new_color(c0: Color, c1: Color) -> Self {
+    pub fn new_from_color(c0: &Color, c1: &Color) -> Self {
         Self::new(SolidColor::new(c0), SolidColor::new(c1))
     }
 }
 impl<T0: Texture, T1: Texture> Texture for CheckerTexture<T0, T1> {
-    fn value(&self, u: f64, v: f64, p: Point3) -> Color {
+    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
         let sines = (10. * p.x).sin() * (10. * p.y).sin() * (10. * p.z).sin();
         if sines < 0. {
             self.odd.value(u, v, p)
@@ -65,7 +65,7 @@ impl NoiseTexture {
 }
 
 impl Texture for NoiseTexture {
-    fn value(&self, _u: f64, _v: f64, p: Point3) -> Color {
+    fn value(&self, _u: f64, _v: f64, p: &Point3) -> Color {
         Color::new(1., 1., 1.) * 0.5 * (1. + (self.scale * p.z + 10. * self.noise.turb7(p)).sin())
     }
 }
@@ -99,7 +99,7 @@ impl ImageTexture {
 }
 
 impl Texture for ImageTexture {
-    fn value(&self, mut u: f64, mut v: f64, _p: Vec3) -> Color {
+    fn value(&self, mut u: f64, mut v: f64, _p: &Point3) -> Color {
         // Clamp input texture coordinates to [0,1] x [1,0]
         u = clamp(u, 0., 1.);
         v = 1. - clamp(v, 0., 1.);
@@ -123,13 +123,13 @@ impl Texture for ImageTexture {
 }
 
 #[derive(Clone)]
-pub struct GreyImageTexture {
+pub struct GrayImageTexture {
     data: Arc<Vec<u8>>,
     width: usize,
     height: usize,
 }
 
-impl GreyImageTexture {
+impl GrayImageTexture {
     pub fn new(file_name: &str) -> Self {
         let image = image::open(file_name)
             .unwrap_or_else(|_| panic!("{}", "Failed to open image ".to_owned() + file_name))
@@ -148,8 +148,8 @@ impl GreyImageTexture {
     }
 }
 
-impl Texture for GreyImageTexture {
-    fn value(&self, mut u: f64, mut v: f64, _p: Vec3) -> Color {
+impl Texture for GrayImageTexture {
+    fn value(&self, mut u: f64, mut v: f64, _p: &Point3) -> Color {
         // Clamp input texture coordinates to [0,1] x [1,0]
         u = clamp(u, 0., 1.);
         v = 1. - clamp(v, 0., 1.);
@@ -174,7 +174,7 @@ pub enum MappingTexture<T: Texture> {
     Texture(T),
 }
 impl<T: Texture> Texture for MappingTexture<T> {
-    fn value(&self, u: f64, v: f64, p: Vec3) -> Color {
+    fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
         match self {
             Self::Color(color) => *color,
             Self::Texture(texture) => texture.value(u, v, p),

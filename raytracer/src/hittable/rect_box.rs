@@ -1,23 +1,66 @@
-use crate::{aarect::*, hittable::*, hittable_list::*};
+use crate::{
+    hittable::{aarect::*, *},
+    material::Material,
+    utility::*,
+};
 
 pub struct RectBox {
-    pub bbox: Aabb,
+    pub box_min: Point3,
+    pub box_max: Point3,
     pub sides: HittableList,
 }
 
 impl RectBox {
-    pub fn new<M: Material + Clone + Copy + 'static>(p0: Point3, p1: Point3, ptr: M) -> Self {
-        let mut sides = HittableList::new();
+    pub fn new<M: Material + Clone + 'static>(p0: &Point3, p1: &Point3, material: M) -> Self {
+        let mut sides = HittableList::default();
+        sides.add(Box::new(XYRect::new(
+            p0.x,
+            p1.x,
+            p0.y,
+            p1.y,
+            p1.z,
+            material.clone(),
+        )));
+        sides.add(Box::new(XYRect::new(
+            p0.x,
+            p1.x,
+            p0.y,
+            p1.y,
+            p0.z,
+            material.clone(),
+        )));
 
-        sides.add(Box::new(XYRect::new(p0.x, p1.x, p0.y, p1.y, p1.z, ptr)));
-        sides.add(Box::new(XYRect::new(p0.x, p1.x, p0.y, p1.y, p0.z, ptr)));
-        sides.add(Box::new(XZRect::new(p0.x, p1.x, p0.z, p1.z, p1.y, ptr)));
-        sides.add(Box::new(XZRect::new(p0.x, p1.x, p0.z, p1.z, p0.y, ptr)));
-        sides.add(Box::new(YZRect::new(p0.y, p1.y, p0.z, p1.z, p1.x, ptr)));
-        sides.add(Box::new(YZRect::new(p0.y, p1.y, p0.z, p1.z, p0.x, ptr)));
+        sides.add(Box::new(XZRect::new(
+            p0.x,
+            p1.x,
+            p0.z,
+            p1.z,
+            p1.y,
+            material.clone(),
+        )));
+        sides.add(Box::new(XZRect::new(
+            p0.x,
+            p1.x,
+            p0.z,
+            p1.z,
+            p0.y,
+            material.clone(),
+        )));
+        sides.add(Box::new(YZRect::new(
+            p0.y,
+            p1.y,
+            p0.z,
+            p1.z,
+            p1.x,
+            material.clone(),
+        )));
+        sides.add(Box::new(YZRect::new(
+            p0.y, p1.y, p0.z, p1.z, p0.x, material,
+        )));
 
         Self {
-            bbox: Aabb::new(p0, p1),
+            box_min: *p0,
+            box_max: *p1,
             sides,
         }
     }
@@ -28,7 +71,8 @@ impl Hittable for RectBox {
         self.sides.hit(r, t_min, t_max)
     }
 
-    fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
-        Some(self.bbox)
+    fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
+        *output_box = AABB::new(&self.box_min, &self.box_max);
+        true
     }
 }

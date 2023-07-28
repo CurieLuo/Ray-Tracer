@@ -1,7 +1,7 @@
 use crate::utility::*;
 use rand::prelude::SliceRandom;
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct Perlin {
     ranvec: Vec<Vec3>,
     perm_x: Vec<usize>,
@@ -39,7 +39,7 @@ impl Perlin {
         p
     }
 
-    pub fn noise(&self, p: Point3) -> f64 {
+    pub fn noise(&self, p: &Point3) -> f64 {
         let u = p.x - p.x.floor();
         let v = p.y - p.y.floor();
         let w = p.z - p.z.floor();
@@ -74,7 +74,7 @@ impl Perlin {
                     accum += (i as f64 * uu + (1. - i as f64) * (1. - u))
                         * (j as f64 * vv + (1. - j as f64) * (1. - v))
                         * (k as f64 * ww + (1. - k as f64) * (1. - w))
-                        * dot(*cijk, weight_v);
+                        * dot(cijk, &weight_v);
                 }
             }
         }
@@ -87,14 +87,14 @@ impl Perlin {
         let mut weight = 1.;
 
         for _ in 0..depth {
-            accum += weight * self.noise(p);
+            accum += weight * self.noise(&p);
             weight *= 0.5;
             p *= 2.;
         }
 
         accum.abs()
     }
-    pub fn turb7(&self, p: Point3) -> f64 {
-        self.turb(p, 7)
+    pub fn turb7(&self, p: &Point3) -> f64 {
+        self.turb(*p, 7)
     }
 }

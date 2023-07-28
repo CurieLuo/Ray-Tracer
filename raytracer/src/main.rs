@@ -1,8 +1,8 @@
-#![allow(dead_code, unused, clippy::eq_op)]
+//#![allow(unused)]
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use rand::{prelude::SliceRandom, thread_rng};
+use rand::prelude::SliceRandom;
 use std::{
     fs::File,
     process::exit,
@@ -12,28 +12,25 @@ use std::{
 
 use camera::*;
 use hittable::*;
-use hittable_list::*;
+use material::ScatterRecord;
+use my_scene::*;
 use pdf::*;
 use scene::*;
-use scene_obj::*;
 use texture::*;
 use utility::*;
 
-mod bvh;
-mod camera;
-mod hittable;
-mod material;
-mod obj_file;
-mod onb;
-mod pdf;
-mod scene;
-mod scene_obj;
-mod texture;
-mod utility;
+pub mod camera;
+pub mod hittable;
+pub mod material;
+pub mod obj_loader;
+pub mod pdf;
+pub mod scene;
+pub mod texture;
+pub mod utility;
 
-const MAX_DEPTH: i32 = 50 / 5;
+const MAX_DEPTH: i32 = 20;
 
-fn _ray_color(
+fn ray_color(
     r: &Ray,
     background: &dyn Texture,
     world: &HittableList,
@@ -45,34 +42,35 @@ fn _ray_color(
         return Color::default();
     }
     if let Some(rec) = world.hit(r, 0.001, INFINITY) {
-        let emitted: Vec3 = rec.mat_ptr.emitted(&rec);
-        if let Some(srec) = rec.mat_ptr._scatter(r, &rec) {
+        let emitted = rec.mat_ptr.emitted(r, &rec, rec.u, rec.v, &rec.p);
+        let mut srec = ScatterRecord::default();
+        if rec.mat_ptr.scatter(r, &rec, &mut srec) {
             if let Some(pdf_ptr) = srec.pdf_ptr {
-                if lights._is_empty() {
-                    let scattered = Ray::new(rec.p, pdf_ptr.generate().unit(), r.time);
-                    let pdf_val = pdf_ptr.value(scattered.direction);
+                if lights.is_empty() {
+                    let scattered = Ray::new(&rec.p, &pdf_ptr.generate().unit(), r.time());
+                    let pdf_val = pdf_ptr.value(scattered.direction_borrow());
 
                     emitted
                         + srec.attenuation
-                            * rec.mat_ptr._scattering_pdf(r, &rec, &scattered)
-                            * _ray_color(&scattered, background, world, lights, depth - 1, (u, v))
+                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                            * ray_color(&scattered, background, world, lights, depth - 1, (u, v))
                             / pdf_val
                 } else {
-                    let light_ptr = HittablePdf::_new(lights, rec.p);
-                    let mixed_pdf = MixturePdf::_new(&light_ptr, pdf_ptr.as_ref(), 0.8);
-                    let scattered = Ray::new(rec.p, mixed_pdf.generate().unit(), r.time);
-                    let pdf_val = mixed_pdf.value(scattered.direction);
+                    let light_ptr = HittablePDF::new(lights, &rec.p);
+                    let mixed_pdf = MixturePDF::new(&light_ptr, pdf_ptr.as_ref());
+                    let scattered = Ray::new(&rec.p, &mixed_pdf.generate().unit(), r.time());
+                    let pdf_val = mixed_pdf.value(scattered.direction_borrow());
 
                     emitted
                         + srec.attenuation
-                            * rec.mat_ptr._scattering_pdf(r, &rec, &scattered)
-                            * _ray_color(&scattered, background, world, lights, depth - 1, (u, v))
+                            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
+                            * ray_color(&scattered, background, world, lights, depth - 1, (u, v))
                             / pdf_val
                 }
             } else {
                 emitted
                     + srec.attenuation
-                        * _ray_color(
+                        * ray_color(
                             &srec.scattered,
                             background,
                             world,
@@ -85,37 +83,10 @@ fn _ray_color(
             emitted
         }
     } else if depth == MAX_DEPTH {
-        background.value(u, v, r.origin)
+        background.value(u, v, r.origin_borrow())
     } else {
-        let dir = r.direction;
-        background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin)
-    }
-}
-
-fn ray_color(
-    r: &Ray,
-    background: &dyn Texture,
-    world: &HittableList,
-    depth: i32,
-    (u, v): (f64, f64),
-) -> Color {
-    if depth <= 0 {
-        return Color::default();
-    }
-    if let Some(rec) = world.hit(r, 0.001, INFINITY) {
-        let emitted: Vec3 = rec.mat_ptr.emitted(&rec);
-        if let Some(srec) = rec.mat_ptr.scatter(r, &rec) {
-            emitted
-                + srec.attenuation
-                    * ray_color(&srec.scattered, background, world, depth - 1, (u, v))
-        } else {
-            emitted
-        }
-    } else if depth == MAX_DEPTH {
-        background.value(u, v, r.origin)
-    } else {
-        let dir = r.direction;
-        background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin)
+        let dir = r.direction_borrow().unit();
+        background.value(0.5 * (dir.x + 1.), 0.5 * (dir.y + 1.), r.origin_borrow())
     }
 }
 
@@ -128,7 +99,6 @@ fn main() {
     let mut aspect_ratio: f64 = 1.;
     let width: u32;
     let samples_per_pixel: i32;
-    let max_depth: i32 = MAX_DEPTH;
     let time0 = 0.;
     let time1 = 1.;
     let quality: u8 = 100;
@@ -138,54 +108,41 @@ fn main() {
     let lookat;
     let vfov;
     let mut aperture = 0.;
-    let mut background: Box<dyn Texture> = Box::new(SolidColor::new(Color::default()));
+    let mut background: Box<dyn Texture> = Box::new(SolidColor::new(&Color::default()));
 
     let world;
-    let lights;
-    match 2 {
+    let mut lights = HittableList::new();
+    match 1 {
         1 => {
-            (world, lights) = scene1();
+            (world, lights) = scifi1();
             aspect_ratio = 16. / 9.;
-            width = 400;
-            samples_per_pixel = 500;
-            lookfrom = Point3::new(0., 0., 100.);
-            lookat = Point3::default();
-            // background = Box::new(SolidColor::new(Color::new(0.00, 0.00, 0.00)));
-            background = Box::new(ImageTexture::new("image/stars.png"));
-            aperture = 0.1;
-            vfov = 40.;
-        }
-        2 => {
-            (world, lights) = scene2();
-            aspect_ratio = 16. / 9.;
-            width = 1600 / 5;
-            samples_per_pixel = 1000 / 10;
+            width = 1600;
+            samples_per_pixel = 1000;
             lookfrom = Point3::new(0., 0., 10.);
             lookat = Point3::default();
-            // background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
-            background = Box::new(ImageTexture::new("image/milky-way-starry-sky.jpg"));
+            // background = Box::new(SolidColor::new(&Color::new(0.70, 0.80, 1.00)));
+            background = Box::new(ImageTexture::new("image/milky_way.png"));
             aperture = 0.1;
             vfov = 40.;
         }
-        3 => {
-            (world, lights) = test1();
-            aspect_ratio = 16. / 9.;
-            width = 600 / 2;
-            samples_per_pixel = 100 / 2;
-            lookfrom = Point3::new(13., 2., 3.);
-            lookat = Point3::default();
-            background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
-            // background = Box::new(ImageTexture::new("image/stars.png"));
-            aperture = 0.1;
-            vfov = 20.;
-            // lookfrom = Point3::new(0., 0., 1000.);
-            // lookat = Point3::default();
-            // background = Box::new(SolidColor::new(Color::new(1.00, 1.00, 1.00)));
-            // // background = Box::new(ImageTexture::new("image/milky_way.png"));
-            // vfov = 45.;
-        }
+        // 2 => {
+        //     (world, lights) = test1();
+        //     aspect_ratio = 16. / 9.;
+        //     width = 600 / 2;
+        //     samples_per_pixel = 100 / 2;
+        //     lookfrom = Point3::new(13., 2., 3.);
+        //     lookat = Point3::default();
+        //     background = Box::new(SolidColor::new(&Color::new(0.70, 0.80, 1.00)));
+        //     // background = Box::new(ImageTexture::new("image/stars.png"));
+        //     aperture = 0.1;
+        //     vfov = 20.;
+        //     // lookfrom = Point3::new(0., 0., 1000.);
+        //     // lookat = Point3::default();
+        //     // background = Box::new(SolidColor::new(&Color::new(1.00, 1.00, 1.00)));
+        //     // // background = Box::new(ImageTexture::new("image/milky_way.png"));
+        //     // vfov = 45.;
+        // }
         _ => {
-            lights = HittableList::new();
             match 1 {
                 1 => {
                     world = random_scene();
@@ -197,28 +154,20 @@ fn main() {
                     samples_per_pixel = 500;
                     lookfrom = Point3::new(13., 2., 3.);
                     lookat = Point3::default();
-                    background = Box::new(SolidColor::new(Color::new(0.70, 0.80, 1.00)));
+                    background = Box::new(SolidColor::new(&Color::new(0.70, 0.80, 1.00)));
                     aperture = 0.1;
                     vfov = 20.;
                 }
                 2 => {
-                    world = cornell_box();
+                    (world, lights) = cornell_box();
                     width = 600;
                     samples_per_pixel = 200;
                     lookfrom = Point3::new(278., 278., -800.);
                     lookat = Point3::new(278., 278., 0.);
                     vfov = 40.;
                 }
-                3 => {
-                    world = simple_light();
-                    width = 400;
-                    samples_per_pixel = 400;
-                    lookfrom = Point3::new(26., 3., 6.);
-                    lookat = Point3::new(0., 2., 0.);
-                    vfov = 20.;
-                }
                 _ => {
-                    world = final_scene();
+                    (world, lights) = final_scene();
                     width = 800;
                     samples_per_pixel = 100;
                     lookfrom = Point3::new(478., 278., -600.);
@@ -235,9 +184,9 @@ fn main() {
     let vup = Vec3::new(0., 1., 0.);
     let dist_to_focus = 10.;
     let cam = Camera::new(
-        lookfrom,
-        lookat,
-        vup,
+        &lookfrom,
+        &lookat,
+        &vup,
         vfov,
         aspect_ratio,
         aperture,
@@ -252,17 +201,15 @@ fn main() {
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let mut task_list: Vec<Vec<(u32, u32)>> = vec![Vec::new(); THREAD_NUM];
     let mut receiver_list = Vec::new();
-    let mut pixel_list = Vec::new();
-    for i in 0..width {
-        for j in 0..height {
-            pixel_list.push((i, j));
+    let mut k = 0;
+    for j in 0..height {
+        for i in 0..width {
+            task_list[k].push((i, j));
+            k = (k + 1) % THREAD_NUM;
         }
     }
-    pixel_list.shuffle(&mut thread_rng());
-    let mut k = 0;
-    for pixel in pixel_list {
-        task_list[k].push(pixel);
-        k = (k + 1) % THREAD_NUM;
+    for task in task_list.iter_mut() {
+        task.shuffle(&mut rand::thread_rng());
     }
 
     let world = Arc::new(world);
@@ -293,21 +240,22 @@ fn main() {
                     let u = ((i as f64) + random()) / ((width - 1) as f64);
                     let v = ((j as f64) + random()) / ((height - 1) as f64);
                     let ray = cam.get_ray(u, v, time0, time1);
-                    let mut color = _ray_color(
+                    let mut color = ray_color(
                         &ray,
                         background_.as_ref(),
                         world_.as_ref(),
                         lights_.as_ref(),
-                        max_depth,
+                        MAX_DEPTH,
                         (u, v),
                     );
                     for _i in 0..3 {
-                        if color[_i] != color[_i] {
+                        if color[_i].is_nan() {
                             color[_i] = 0.;
                         }
                     }
                     // TODO eliminate NaN, not just catch it
                     pixel_color += color;
+                    // TODO pdf for generic material
                 }
                 pixel_color /= samples_per_pixel as f64;
                 for _i in 0..3 {

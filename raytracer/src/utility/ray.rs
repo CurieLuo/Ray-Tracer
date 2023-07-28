@@ -1,22 +1,42 @@
-use crate::vec3::*;
+use crate::utility::vec3::*;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct Ray {
-    pub origin: Point3,
-    pub direction: Vec3,
-    pub time: f64, // see camera.rs
+    pub orig: Point3,
+    pub dir: Vec3,
+    pub tm: f64,
 }
 
 impl Ray {
-    pub fn new(origin: Point3, direction: Vec3, time: f64) -> Self {
-        // let direction = direction.unit();
+    pub fn new(orig: &Point3, dir: &Vec3, time: f64) -> Self {
         Ray {
-            origin,
-            direction,
-            time,
+            orig: *orig,
+            dir: *dir,
+            tm: time,
         }
     }
+
+    pub fn origin(&self) -> Point3 {
+        self.orig
+    }
+
+    pub fn origin_borrow(&self) -> &Point3 {
+        &self.orig
+    }
+
+    pub fn direction(&self) -> Vec3 {
+        self.dir
+    }
+
+    pub fn direction_borrow(&self) -> &Vec3 {
+        &self.dir
+    }
+
     pub fn at(&self, t: f64) -> Point3 {
-        self.origin + self.direction * t
+        self.orig + t * self.dir
+    }
+
+    pub fn time(&self) -> f64 {
+        self.tm
     }
 }
