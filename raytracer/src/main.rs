@@ -54,8 +54,8 @@ fn main() {
         1 => {
             (world, lights) = scifi1();
             aspect_ratio = 16. / 9.;
-            width = 1600;
-            samples_per_pixel = 1000;
+            width = 3200;
+            samples_per_pixel = 2000;
             lookfrom = Point3::new(0., 0., 10.);
             lookat = Point3::default();
             // background = Box::new(SolidColor::new(&Color::new(0.70, 0.80, 1.00)));

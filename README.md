@@ -4,6 +4,41 @@
 
 > SJTU ACM Honors Class 2023 Ray Tracer Project with Rust!
 
+> Note: the original README.md is placed in the last section
+
+## My Final Scene
+
+![](curie_final_scene.jpg)
+
+## Advanced Features
+
+#### Rust:
+
+- contention reduction
+
+- static dispatch
+
+#### CG:
+
+- support .obj & .mtl files
+- texture mapping
+- normal mapping (with naive normal interpolation)
+- generic material (diffuse, specular, transparent and emissive all-in-one)
+  
+## Useful / Interesting Sites
+
+- .obj free download: [CGTrader](https://www.cgtrader.com/), [Free3D](https://free3d.com/3d-models/obj)
+
+- [convert image to normal map](https://cpetry.github.io/NormalMap-Online/)
+
+## Notes
+
+- The ```set_face_normal()``` calls in ```Translate``` and ```RotateY``` are redundant ( and it causes a bug in the case of ```RotateY```).
+- Remember to add $\pm$0.0001 to the bounding box of triangles!
+- Beware ```let``` declarations that shadow previous variables!!! (Misuse of ```let``` in ```AABB::hit()``` disabled my ```BVH``` and my program became extremely sluggish, but since no warning was generated and my output images were fine, for two whole weeks I didn't suspect anything.)
+
+## Requirements & Tips
+
 **Before you start, please read this README carefully**, and there is no useless information in this document.
 
 ### Introduction
@@ -58,7 +93,7 @@ This is probably your first time to use Rust, so there are some resources for yo
 - [*Rust 语言圣经*](https://course.rs/about-book.html)
 - [*The Cargo Book*](https://doc.rust-lang.org/cargo/index.html)
 - [*Rust By Example*](https://doc.rust-lang.org/rust-by-example/index.html)
-- [*Rust Nomicon*](https://doc.rust-lang.org/nomicon/index.html) is for advanced users. E.g. you can learn how to write unsafe code in Rust
+- [*Rust Nomicon*](https://doc.rust-lang.org/nomicon/index.html) is for advanced users. e.g. you can learn how to write unsafe code in Rust
 
 #### Something you should know about Rust
 
